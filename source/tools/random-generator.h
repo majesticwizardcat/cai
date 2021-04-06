@@ -20,5 +20,9 @@ public:
 	inline float get() {
 		return m_distribution(m_randomDevice);
 	}
+
+	inline float get(float from, float to) {
+		return from + get() * (to - from);
+	}
 };
 

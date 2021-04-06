@@ -36,6 +36,9 @@
     <ClCompile Include="..\source\game\player.cpp">
       <Filter>Source Files\game</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\ai\neural-network.cpp">
+      <Filter>Source Files\ai</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\game\board.h">
@@ -63,6 +66,9 @@
       <Filter>Source Files\ai</Filter>
     </ClInclude>
     <ClInclude Include="..\source\tools\util.h">
+      <Filter>Source Files\tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\tools\testing.h">
       <Filter>Source Files\tools</Filter>
     </ClInclude>
   </ItemGroup>

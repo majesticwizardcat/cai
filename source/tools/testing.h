@@ -17,7 +17,6 @@ unsigned long long perft(const std::string& fen, int depth) {
 		if (depth == 0) {
 			return moves.size();
 		}
-
 		unsigned long long positions = 0;
 		for (const auto& m : moves) {
 			Board nextPosition(b);

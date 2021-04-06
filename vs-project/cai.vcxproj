@@ -80,6 +80,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\source\ai\neural-network.cpp" />
     <ClCompile Include="..\source\cai.cpp" />
     <ClCompile Include="..\source\game\board.cpp" />
     <ClCompile Include="..\source\game\game.cpp" />
@@ -93,6 +94,7 @@
     <ClInclude Include="..\source\game\piece.h" />
     <ClInclude Include="..\source\game\player.h" />
     <ClInclude Include="..\source\game\tile.h" />
+    <ClInclude Include="..\source\tools\testing.h" />
     <ClInclude Include="..\source\tools\random-generator.h" />
     <ClInclude Include="..\source\tools\util.h" />
   </ItemGroup>
