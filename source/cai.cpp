@@ -1,5 +1,6 @@
 #include "game/game.h"
 #include "tools/util.h"
+#include "tools/testing.h"
 
 #include <iostream>
 #include <memory>
@@ -23,6 +24,10 @@ void playGame() {
 	g.start();
 }
 
+void runPerft(int depth) {
+	std::cout << "Perft for depth: " << depth << " is: " << testing::perft(depth) << '\n';
+}
+
 void processCommand(const std::string& command, const std::vector<std::string>& arguments) {
 	if (command == "help") {
 		printInstructions();
@@ -35,7 +40,15 @@ void processCommand(const std::string& command, const std::vector<std::string>& 
 		playGame();
 	}
 	else if (command == "perft") {
-		std::cout << "perft is currently unavailable" << '\n';
+		if (arguments.size() < 1 || arguments[0].empty()) {
+			std::cout << "No argument for perft depth, run 'perft [depth]'" << '\n';
+			return;
+		}
+		if (!isdigit(arguments[0][0])) {
+			std::cout << "Bad argument for perft depth" << '\n';
+			return;
+		}
+		runPerft(atoi(arguments[0].c_str()));
 	}
 }
 
