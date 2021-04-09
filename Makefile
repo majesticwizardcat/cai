@@ -1,4 +1,4 @@
-SOURCE = source/game/*.cpp
+SOURCE = source/game/*.cpp source/ai/*.cpp
 INCLUDES = -Isource -Ilibraries
 NAME = cai
 OPTIONS = -O3 -pthread -std=c++17 -Wno-narrowing -mavx

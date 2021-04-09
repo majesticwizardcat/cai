@@ -62,11 +62,6 @@ public:
 	void setupBoard();
 	void printBoard() const;
 	void playMove(const Move& move);
-	void setBoard(const Board& board) {
-		m_width = board.m_width;
-		m_height = board.m_height;
-		m_tiles = board.m_tiles;
-	}
 
 	inline void placePiece(int x, int y, PieceType type, Color color) {
 		m_tiles[index(x, y)].placePiece(type, color);
@@ -83,6 +78,15 @@ public:
 			ret.push_back(t.getPiece().getPieceChar());
 		}
 		return std::move(ret);
+	}
+
+	inline std::vector<float> asFloats() const {
+		std::vector<float> result;
+		result.reserve(m_width * m_height);
+		for (const auto& t : m_tiles) {
+			result.push_back(t.getPiece().getPieceFloat());
+		}
+		return std::move(result);
 	}
 
 	Color setPosition(const std::string& fen);

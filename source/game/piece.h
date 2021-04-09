@@ -24,9 +24,9 @@ public:
 	char getPieceChar() const {
 		switch(m_type) {
 		case PieceType::PAWN:
-			return m_color == Color::WHITE ? 'P' : 'n';
+			return m_color == Color::WHITE ? 'P' : 'p';
 		case PieceType::KNIGHT:
-			return m_color == Color::WHITE ? 'H' : 'h';
+			return m_color == Color::WHITE ? 'N' : 'n';
 		case PieceType::BISHOP:
 			return m_color == Color::WHITE ? 'B' : 'b';
 		case PieceType::ROOK:
@@ -34,12 +34,38 @@ public:
 		case PieceType::QUEEN:
 			return m_color == Color::WHITE ? 'Q' : 'q';
 		case PieceType::KING:
-			return m_color == Color::WHITE ? 'K' : 'g';
+			return m_color == Color::WHITE ? 'K' : 'k';
 		default:
 			return ' ';
 
 		};
 		return ' ';
+	}
+
+	char getPieceFloat() const {
+		float color = m_color == Color::WHITE ? 1.0f : -1.0f;
+		float start = 0.0f;
+		if (m_moves == 0) {
+			start = 0.05f;
+		}
+		switch(m_type) {
+		case PieceType::PAWN:
+			return (0.1f + start) * color;
+		case PieceType::KNIGHT:
+			return 0.3f * color;
+		case PieceType::BISHOP:
+			return 0.4f * color;
+		case PieceType::ROOK:
+			return (0.5f + start) * color;
+		case PieceType::QUEEN:
+			return (0.9f) * color;
+		case PieceType::KING:
+			return (1.0f + start) * color;
+		default:
+			return 0.0f;
+
+		};
+		return 0.0f;
 	}
 	
 	inline PieceType getType() const { return m_type; }

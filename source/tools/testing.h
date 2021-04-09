@@ -10,7 +10,7 @@ const std::string DEFAULT_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN
 
 namespace testing {
 
-unsigned long long perft(const std::string& fen, int depth) {
+unsigned long long perft(const std::string& fen, int startingDepth) {
 	std::function<unsigned long long(const Board&, int, Color)>
 		findPositions = [&](const Board& b, int depth, Color nextPlayer) {
 		auto moves = b.getMoves(nextPlayer);
@@ -18,17 +18,28 @@ unsigned long long perft(const std::string& fen, int depth) {
 			return moves.size();
 		}
 		unsigned long long positions = 0;
+		int curMoveIndex = 0;
 		for (const auto& m : moves) {
 			Board nextPosition(b);
 			nextPosition.playMove(m);
 			positions += findPositions(nextPosition, depth - 1,
 				nextPlayer == Color::WHITE ? Color::BLACK : Color::WHITE);
+			if (depth == startingDepth) {
+				curMoveIndex++;
+				std::cout << "\rPositions: " << positions << ", searched: "
+					<< curMoveIndex << " out of " << moves.size();
+			}
+		}
+		if (depth == startingDepth) {
+			std::cout << '\n';
 		}
 		return positions;
 	};
 	Board start;
 	Color next = start.setPosition(fen);
-	return findPositions(start, depth, next);
+	start.printBoard();
+	std::cout << "Starting perft test with depth " << startingDepth << '\n';
+	return findPositions(start, startingDepth, next);
 }
 
 unsigned long long perft(int depth) {

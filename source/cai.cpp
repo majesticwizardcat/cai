@@ -25,7 +25,15 @@ void playGame() {
 }
 
 void runPerft(int depth) {
-	std::cout << "Perft for depth: " << depth << " is: " << testing::perft(depth) << '\n';
+	std::string fen;
+	std::cout << "Give the FEN for the position(empty for default): ";
+	std::getline(std::cin, fen);
+	if (fen.empty()) {
+		std::cout << "Perft for depth: " << depth << " is: " << testing::perft(depth) << '\n';
+	}
+	else {
+		std::cout << "Perft for depth: " << depth << " is: " << testing::perft(fen, depth) << '\n';
+	}
 }
 
 void processCommand(const std::string& command, const std::vector<std::string>& arguments) {

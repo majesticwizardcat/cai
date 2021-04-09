@@ -12,6 +12,8 @@ class NeuralNetwork;
 static RandomGenerator RGEN;
 const float MIN_W = -1.0f;
 const float MAX_W = 1.0f;
+const float MUTATION_TYPES = 3.0f;
+const float MUTATION_TYPE_W = 1.0f / MUTATION_TYPES;
 
 class Connection {
 public:
@@ -36,7 +38,7 @@ public:
 	Neuron(Neuron&& other) noexcept : value(std::move(other.value)),
 		connections(std::move(other.connections)) { }
 
-	void connectLayer(Layer& layer);
+	void connectLayer(Layer& layer, bool random);
 	void connectNeuron(float weight, Neuron* n);
 	void feedForward();
 };
@@ -49,7 +51,7 @@ public:
 	Layer(const Layer& other) = delete;
 	Layer(Layer&& other) noexcept : neurons(std::move(other.neurons)) { }
 
-	void connectLayer(Layer& layer);
+	void connectLayer(Layer& layer, bool random);
 	void feedForward();
 	int size() const { return neurons.size(); }
 };
@@ -58,11 +60,20 @@ class NeuralNetwork {
 private:
 	std::vector<Layer> m_layers;
 
+	void connectForward(int startIndex, bool random);
+	float mutateWeight(float weight, float p) const;
+
 public:
 	NeuralNetwork() = delete;
 	NeuralNetwork(const NeuralNetwork& other) = delete;
 	NeuralNetwork(NeuralNetwork&& other) noexcept : m_layers(std::move(other.m_layers)) { }
 	NeuralNetwork(const std::vector<int> architecture);
+	NeuralNetwork(const NeuralNetwork& n0, const NeuralNetwork& n1);
+	NeuralNetwork(const NeuralNetwork& n0, const NeuralNetwork& n1, float mutationProb) {
+		buildFromParents(n0, n1, mutationProb);
+	}
 
 	std::vector<float> feed(const std::vector<float> input);
+	void buildFromParents(const NeuralNetwork& n0, const NeuralNetwork& n1, float mutationProb);
+	void mutate(float mutationProb);
 };
