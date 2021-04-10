@@ -15,7 +15,7 @@ unsigned long long perft(const std::string& fen, int startingDepth) {
 		findPositions = [&](const Board& b, int depth, Color nextPlayer) {
 		auto moves = b.getMoves(nextPlayer);
 		if (depth == 0) {
-			return moves.size();
+			return (unsigned long long) moves.size();
 		}
 		unsigned long long positions = 0;
 		int curMoveIndex = 0;

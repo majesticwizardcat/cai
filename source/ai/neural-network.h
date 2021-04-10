@@ -4,6 +4,7 @@ class Neuron;
 class Connection;
 class Layer;
 class NeuralNetwork;
+struct SaveData;
 
 #include "tools/random-generator.h"
 
@@ -56,6 +57,14 @@ public:
 	int size() const { return neurons.size(); }
 };
 
+struct SaveData {
+	std::vector<int> layers;
+	std::vector<float> weights;
+
+	void loadFromDisk(const char* location);
+	void writeToDisk(const char* location) const;
+};
+
 class NeuralNetwork {
 private:
 	std::vector<Layer> m_layers;
@@ -67,13 +76,18 @@ public:
 	NeuralNetwork() = delete;
 	NeuralNetwork(const NeuralNetwork& other) = delete;
 	NeuralNetwork(NeuralNetwork&& other) noexcept : m_layers(std::move(other.m_layers)) { }
-	NeuralNetwork(const std::vector<int> architecture);
-	NeuralNetwork(const NeuralNetwork& n0, const NeuralNetwork& n1);
-	NeuralNetwork(const NeuralNetwork& n0, const NeuralNetwork& n1, float mutationProb) {
-		buildFromParents(n0, n1, mutationProb);
-	}
+	NeuralNetwork(const std::vector<int> layout);
+	NeuralNetwork(const NeuralNetwork& n0, const NeuralNetwork& n1, float mutationProb);
+	NeuralNetwork(const char* location);
 
 	std::vector<float> feed(const std::vector<float> input);
 	void buildFromParents(const NeuralNetwork& n0, const NeuralNetwork& n1, float mutationProb);
+	void buildFromLayout(const std::vector<int> layout, bool random);
+	void buildFromSave(const SaveData& data);
 	void mutate(float mutationProb);
+	SaveData toSaveData() const;
+
+	inline void save(const char* location) const {
+		toSaveData().writeToDisk(location);
+	}
 };

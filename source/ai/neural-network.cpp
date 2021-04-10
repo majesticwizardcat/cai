@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <fstream>
 
 void Neuron::connectLayer(Layer& layer, bool random) {
 	for (auto& n : layer.neurons) {
@@ -32,16 +33,46 @@ void Layer::feedForward() {
 	}
 }
 
-NeuralNetwork::NeuralNetwork(const std::vector<int> architecture) {
-	if (architecture.size() < 2) {
-		std::cout << "Error: Attempting to create neural network with less than 2 layrers -> Exiting" << '\n';
-		exit(0);
+void SaveData::writeToDisk(const char* location) const {
+	std::ofstream outfile(location);
+	outfile << layers.size() << '\n';
+	for (int l : layers) {
+		outfile << l << '\n';
 	}
-	m_layers.reserve(architecture.size());
-	for (int l : architecture) {
-		m_layers.emplace_back(l);
+	for (float w : weights) {
+		outfile << w << '\n';
 	}
-	connectForward(0, true);
+	outfile.close();
+}
+
+void SaveData::loadFromDisk(const char* location) {
+	std::ifstream infile(location);
+	int layersNum;
+	infile >> layersNum;
+	for (int i = 0; i < layersNum; ++i) {
+		int layerSize;
+		infile >> layerSize;
+		layers.push_back(layerSize);
+	}
+	float w;
+	while (infile >> w) {
+		weights.push_back(w);
+	}
+	infile.close();
+}
+
+NeuralNetwork::NeuralNetwork(const std::vector<int> layout) {
+	buildFromLayout(layout, true);
+}
+
+NeuralNetwork::NeuralNetwork(const NeuralNetwork& n0, const NeuralNetwork& n1, float mutationProb) {
+	buildFromParents(n0, n1, mutationProb);
+}
+
+NeuralNetwork::NeuralNetwork(const char* location) {
+	SaveData saveData;
+	saveData.loadFromDisk(location);
+	buildFromSave(saveData);
 }
 
 void NeuralNetwork::connectForward(int startIndex, bool random) {
@@ -65,6 +96,7 @@ std::vector<float> NeuralNetwork::feed(const std::vector<float> input) {
 	for (const auto& n : m_layers.back().neurons) {
 		out.push_back(n.value);
 	}
+	return std::move(out);
 }
 
 void NeuralNetwork::buildFromParents(const NeuralNetwork& n0, const NeuralNetwork& n1,
@@ -87,6 +119,30 @@ void NeuralNetwork::buildFromParents(const NeuralNetwork& n0, const NeuralNetwor
 		}
 	}
 	mutate(mutationProb);
+}
+
+void NeuralNetwork::buildFromLayout(const std::vector<int> layout, bool random) {
+	if (layout.size() < 2) {
+		std::cout << "Error: Attempting to create neural network with less than 2 layrers -> Exiting" << '\n';
+		exit(0);
+	}
+	m_layers.reserve(layout.size());
+	for (int l : layout) {
+		m_layers.emplace_back(l);
+	}
+	connectForward(0, random);
+}
+
+void NeuralNetwork::buildFromSave(const SaveData& data) {
+	buildFromLayout(data.layers, false);
+	int nextWeight = 0;
+	for (auto& l : m_layers) {
+		for (auto& n : l.neurons) {
+			for (auto& c : n.connections) {
+				c.weight = data.weights[nextWeight++];
+			}
+		}
+	}
 }
 
 void NeuralNetwork::mutate(float mutationProb) {
@@ -115,3 +171,17 @@ float NeuralNetwork::mutateWeight(float weight, float p) const {
 	}
 	return RGEN.get(-1.0f, 1.0f);
 }
+
+SaveData NeuralNetwork::toSaveData() const {
+	SaveData saveData;
+	for (const auto& l : m_layers) {
+		saveData.layers.push_back(l.neurons.size());
+		for (const auto& n : l.neurons) {
+			for (const auto& c : n.connections) {
+				saveData.weights.push_back(c.weight);
+			}
+		}
+	}
+	return std::move(saveData);
+}
+
