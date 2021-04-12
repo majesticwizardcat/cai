@@ -4,9 +4,10 @@ class Neuron;
 class Connection;
 class Layer;
 class NeuralNetwork;
-struct SaveData;
+struct NNSaveData;
 
 #include "tools/random-generator.h"
+#include "tools/util.h"
 
 #include <vector>
 
@@ -26,6 +27,14 @@ public:
 	Connection(const Connection& other) = delete;
 	Connection(Connection&& other) noexcept : weight(std::move(other.weight)),
 		to(std::move(other.to)) { }
+	inline bool operator==(const Connection& other) const {
+		return util::equals(weight, other.weight);
+	}
+
+	inline bool operator!=(const Connection& other) const {
+		return !util::equals(weight, other.weight);
+	}
+
 };
 
 class Neuron {
@@ -42,6 +51,8 @@ public:
 	void connectLayer(Layer& layer, bool random);
 	void connectNeuron(float weight, Neuron* n);
 	void feedForward();
+	bool operator==(const Neuron& other) const;
+	inline bool operator!=(const Neuron& other) const { return !(*this == other); }
 };
 
 class Layer {
@@ -53,11 +64,14 @@ public:
 	Layer(Layer&& other) noexcept : neurons(std::move(other.neurons)) { }
 
 	void connectLayer(Layer& layer, bool random);
+	void latch(const std::vector<float> values);
 	void feedForward();
-	int size() const { return neurons.size(); }
+	bool operator==(const Layer& other) const;
+	bool operator!=(const Layer& other) const { return !(*this == other); }
+	inline int size() const { return neurons.size(); }
 };
 
-struct SaveData {
+struct NNSaveData {
 	std::vector<int> layers;
 	std::vector<float> weights;
 
@@ -83,9 +97,10 @@ public:
 	std::vector<float> feed(const std::vector<float> input);
 	void buildFromParents(const NeuralNetwork& n0, const NeuralNetwork& n1, float mutationProb);
 	void buildFromLayout(const std::vector<int> layout, bool random);
-	void buildFromSave(const SaveData& data);
+	void buildFromSave(const NNSaveData& data);
 	void mutate(float mutationProb);
-	SaveData toSaveData() const;
+	NNSaveData toSaveData() const;
+	bool operator==(const NeuralNetwork& other) const;
 
 	inline void save(const char* location) const {
 		toSaveData().writeToDisk(location);

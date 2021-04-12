@@ -21,9 +21,30 @@ void Neuron::feedForward() {
 	}
 }
 
+bool Neuron::operator==(const Neuron& other) const {
+	if (connections.size() != other.connections.size()) {
+		std::cout << "Neurons have different connections" << '\n';
+		return false;
+	}
+	for (int i = 0; i < connections.size(); ++i) {
+		if (connections[i] != other.connections[i]) {
+			std::cout << "Different weight" << '\n';
+			return false;
+		}
+	}
+	return true;
+}
+
 void Layer::connectLayer(Layer& layer, bool random) {
 	for (auto& n : neurons) {
 		n.connectLayer(layer, random);
+	}
+}
+
+void Layer::latch(const std::vector<float> values) {
+	int i = 0;
+	for (auto& n : neurons) {
+		n.value = values[i++];
 	}
 }
 
@@ -33,7 +54,20 @@ void Layer::feedForward() {
 	}
 }
 
-void SaveData::writeToDisk(const char* location) const {
+bool Layer::operator==(const Layer& other) const {
+	if (neurons.size() != other.neurons.size()) {
+		std::cout << "Layers have different sizes" << '\n';
+		return false;
+	}
+	for (int i = 0; i < neurons.size(); ++i) {
+		if (neurons[i] != other.neurons[i]) {
+			return false;
+		}
+	}
+	return true;
+}
+
+void NNSaveData::writeToDisk(const char* location) const {
 	std::ofstream outfile(location);
 	outfile << layers.size() << '\n';
 	for (int l : layers) {
@@ -45,7 +79,7 @@ void SaveData::writeToDisk(const char* location) const {
 	outfile.close();
 }
 
-void SaveData::loadFromDisk(const char* location) {
+void NNSaveData::loadFromDisk(const char* location) {
 	std::ifstream infile(location);
 	int layersNum;
 	infile >> layersNum;
@@ -70,7 +104,7 @@ NeuralNetwork::NeuralNetwork(const NeuralNetwork& n0, const NeuralNetwork& n1, f
 }
 
 NeuralNetwork::NeuralNetwork(const char* location) {
-	SaveData saveData;
+	NNSaveData saveData;
 	saveData.loadFromDisk(location);
 	buildFromSave(saveData);
 }
@@ -86,11 +120,12 @@ std::vector<float> NeuralNetwork::feed(const std::vector<float> input) {
 		std::cout << "Error: Feeding network with different size input -> Exiting" << '\n';
 		exit(0);
 	}
-	int i = 0;
-	for (auto& n : m_layers[0].neurons) {
-		n.value = input[i++];
+	m_layers[0].latch(input);
+
+	for (auto& l : m_layers) {
+		l.feedForward();
 	}
-	m_layers[0].feedForward();
+
 	std::vector<float> out;
 	out.reserve(m_layers.back().size());
 	for (const auto& n : m_layers.back().neurons) {
@@ -133,7 +168,7 @@ void NeuralNetwork::buildFromLayout(const std::vector<int> layout, bool random) 
 	connectForward(0, random);
 }
 
-void NeuralNetwork::buildFromSave(const SaveData& data) {
+void NeuralNetwork::buildFromSave(const NNSaveData& data) {
 	buildFromLayout(data.layers, false);
 	int nextWeight = 0;
 	for (auto& l : m_layers) {
@@ -172,8 +207,8 @@ float NeuralNetwork::mutateWeight(float weight, float p) const {
 	return RGEN.get(-1.0f, 1.0f);
 }
 
-SaveData NeuralNetwork::toSaveData() const {
-	SaveData saveData;
+NNSaveData NeuralNetwork::toSaveData() const {
+	NNSaveData saveData;
 	for (const auto& l : m_layers) {
 		saveData.layers.push_back(l.neurons.size());
 		for (const auto& n : l.neurons) {
@@ -183,5 +218,18 @@ SaveData NeuralNetwork::toSaveData() const {
 		}
 	}
 	return std::move(saveData);
+}
+
+bool NeuralNetwork::operator==(const NeuralNetwork& other) const {
+	if (m_layers.size() != other.m_layers.size()) {
+		std::cout << "Networks have different sizes" << '\n';
+		return false;
+	}
+	for (int i = 0; i < m_layers.size(); ++i) {
+		if (m_layers[i] != other.m_layers[i]) {
+			return false;
+		}
+	}
+	return true;
 }
 
