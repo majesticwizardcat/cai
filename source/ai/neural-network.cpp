@@ -69,30 +69,45 @@ bool Layer::operator==(const Layer& other) const {
 
 void NNSaveData::writeToDisk(const char* location) const {
 	std::ofstream outfile(location);
-	outfile << layers.size() << '\n';
-	for (int l : layers) {
-		outfile << l << '\n';
-	}
-	for (float w : weights) {
-		outfile << w << '\n';
-	}
+	outfile << asString();
 	outfile.close();
 }
 
 void NNSaveData::loadFromDisk(const char* location) {
-	std::ifstream infile(location);
+	std::ifstream inFile(location);
+	loadFromStream(inFile);
+	inFile.close();
+}
+
+std::string NNSaveData::asString() const {
+	std::string str;
+	str += std::to_string(layers.size()) + '\n';
+	for (int l : layers) {
+		str += std::to_string(l) + '\n';
+	}
+	for (float w : weights) {
+		str += std::to_string(w) + '\n';
+	}
+	return std::move(str);
+}
+
+void NNSaveData::loadFromStream(std::ifstream& inputFile) {
 	int layersNum;
-	infile >> layersNum;
+	inputFile >> layersNum;
 	for (int i = 0; i < layersNum; ++i) {
 		int layerSize;
-		infile >> layerSize;
+		inputFile >> layerSize;
 		layers.push_back(layerSize);
 	}
 	float w;
-	while (infile >> w) {
-		weights.push_back(w);
+	for (int i = 0; i < layers.size() - 1; ++i) {
+		for (int j = 0; j < layers[i]; ++j) {
+			for (int k = 0; k < layers[i + 1]; ++k) {
+				inputFile >> w;
+				weights.push_back(w);
+			}
+		}
 	}
-	infile.close();
 }
 
 NeuralNetwork::NeuralNetwork(const std::vector<int> layout) {
@@ -104,8 +119,10 @@ NeuralNetwork::NeuralNetwork(const NeuralNetwork& n0, const NeuralNetwork& n1, f
 }
 
 NeuralNetwork::NeuralNetwork(const char* location) {
-	NNSaveData saveData;
-	saveData.loadFromDisk(location);
+	buildFromSave(NNSaveData(location));
+}
+
+NeuralNetwork::NeuralNetwork(const NNSaveData& saveData) {
 	buildFromSave(saveData);
 }
 

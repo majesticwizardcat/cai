@@ -20,7 +20,7 @@ std::vector<std::string> split(const std::string& str, const std::string& delim)
 }
 
 bool equals(float f0, float f1) {
-	return f0 >= f1 - ERROR && f0 <= f1 + ERROR;
+	return std::abs(f0 - f1) - ERROR <= 0.0f;
 }
 
 }

@@ -9,7 +9,9 @@ struct NNSaveData;
 #include "tools/random-generator.h"
 #include "tools/util.h"
 
+#include <string>
 #include <vector>
+#include <fstream>
 
 static RandomGenerator RGEN;
 const float MIN_W = -1.0f;
@@ -75,8 +77,25 @@ struct NNSaveData {
 	std::vector<int> layers;
 	std::vector<float> weights;
 
+	NNSaveData() { }
+	NNSaveData(const NNSaveData& other)
+		: layers(other.layers), weights(other.weights) { }
+	NNSaveData(NNSaveData&& other) : layers(std::move(other.layers)),
+		weights(std::move(other.weights)) { }
+	NNSaveData(const char* location) {
+		loadFromDisk(location);
+	}
+
+	NNSaveData& operator=(NNSaveData other) {
+		layers = std::move(other.layers);
+		weights = std::move(other.weights);
+		return *this;
+	}
+
 	void loadFromDisk(const char* location);
 	void writeToDisk(const char* location) const;
+	std::string asString() const;
+	void loadFromStream(std::ifstream& inputFile);
 };
 
 class NeuralNetwork {
@@ -93,6 +112,7 @@ public:
 	NeuralNetwork(const std::vector<int> layout);
 	NeuralNetwork(const NeuralNetwork& n0, const NeuralNetwork& n1, float mutationProb);
 	NeuralNetwork(const char* location);
+	NeuralNetwork(const NNSaveData& saveData);
 
 	std::vector<float> feed(const std::vector<float> input);
 	void buildFromParents(const NeuralNetwork& n0, const NeuralNetwork& n1, float mutationProb);
