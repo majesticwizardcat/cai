@@ -3,7 +3,7 @@
 #include <iostream>
 #include <algorithm>
 
-bool HumanPlayer::getMove(const Board& board, Move* move) const {
+bool HumanPlayer::getMove(const Board& board, Move* move) {
 	board.printBoard();
 	std::vector<Move> moves = board.getMoves(m_color);
 	if (moves.empty()) {

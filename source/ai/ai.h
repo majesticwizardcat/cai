@@ -9,10 +9,10 @@ struct AISaveData;
 #include <vector>
 #include <fstream>
 
-const std::vector<int> PROPAGATOR_LAYOUT = { 64, 100, 156, 80, 64 };
+const std::vector<int> PROPAGATOR_LAYOUT = { 64, 100, 80, 64 };
 const std::vector<int> ANALYZER_LAYOUT = { 64, 100, 80, 30, 10, 1 };
 const std::vector<int> FAST_LOOKUP_LAYOUT = { 64, 30, 10, 1 };
-const std::vector<int> CYCLES_MANAGER_LAYOUT = { 2, 4, 6, 3, 1 };
+const std::vector<int> CYCLES_MANAGER_LAYOUT = { 2, 4, 3, 1 };
 const std::vector<int> NORMALIZER_LAYOUT = { 1, 3, 1 };
 
 struct AISaveData {
@@ -59,10 +59,11 @@ public:
 	AI(AI&& other);
 	AI(const AISaveData& saveData);
 	AI(const char* location);
+	AI(const AI& ai0, const AI& ai1, float mutationProb);
 
 	void save(const char* location) const;
 	AISaveData toSaveData() const;
-	int cycles(int current, int max);
+	int cycles(int current, int move);
 	float analyze(const std::vector<float>& position, int cycles);
 	float fastLookup(const std::vector<float>& position);
 	std::vector<float> propagate(const std::vector<float>& inputPosition, int cycles);

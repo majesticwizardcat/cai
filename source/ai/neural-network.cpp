@@ -141,6 +141,9 @@ std::vector<float> NeuralNetwork::feed(const std::vector<float> input) {
 
 	for (auto& l : m_layers) {
 		l.feedForward();
+		for (auto& n : l.neurons) {
+			n.value = active(n.value);
+		}
 	}
 
 	std::vector<float> out;
@@ -221,7 +224,7 @@ float NeuralNetwork::mutateWeight(float weight, float p) const {
 	if (p >= MUTATION_TYPE_W && p < MUTATION_TYPE_W * 2.0f) {
 		return (RGEN.get(-1.0f, 1.0f) + weight) * 0.5f;
 	}
-	return RGEN.get(-1.0f, 1.0f);
+	return RGEN.get(MIN_W, MAX_W);
 }
 
 NNSaveData NeuralNetwork::toSaveData() const {

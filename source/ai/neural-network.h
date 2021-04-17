@@ -14,10 +14,13 @@ struct NNSaveData;
 #include <fstream>
 
 static RandomGenerator RGEN;
-const float MIN_W = -1.0f;
-const float MAX_W = 1.0f;
+const float MIN_W = -0.5f;
+const float MAX_W = 0.5f;
 const float MUTATION_TYPES = 3.0f;
 const float MUTATION_TYPE_W = 1.0f / MUTATION_TYPES;
+const float L = 2.0f;
+const float M = L * 0.5f;
+const float k = 3.0f;
 
 class Connection {
 public:
@@ -104,6 +107,15 @@ private:
 
 	void connectForward(int startIndex, bool random);
 	float mutateWeight(float weight, float p) const;
+	inline float active(float x) const {
+		if (x - M <= 0.0f) {
+			return -M;
+		}
+		if (x - M >= 0.0f) {
+			return M;
+		}
+		return L / (1.0f + std::exp(-k * x)) - M;
+	}
 
 public:
 	NeuralNetwork() = delete;

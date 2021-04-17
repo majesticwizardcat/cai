@@ -4,7 +4,7 @@
 #include <string>
 #include <utility>
 
-const float ERROR = 0.001f;
+const float ERROR = 0.01f;
 
 namespace util {
 

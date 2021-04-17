@@ -3,6 +3,7 @@ depth-test
 cai
 fen-test
 ai-test
+game-ai-test
 vs-project/.vs
 vs-project/x64
 vs-project/cai.vcxproj.user

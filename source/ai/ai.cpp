@@ -53,6 +53,14 @@ AI::AI(const AISaveData& saveData) : m_propagator(saveData.propagator),
 
 AI::AI(const char* location) : AI(AISaveData(location)) { }
 
+AI::AI(const AI& ai0, const AI& ai1, float mutationProb)
+	: m_propagator(ai0.m_propagator, ai1.m_propagator, mutationProb),
+	m_analyzer(ai0.m_analyzer, ai1.m_analyzer, mutationProb),
+	m_fastLookup(ai0.m_fastLookup, ai1.m_fastLookup, mutationProb),
+	m_cyclesManager(ai0.m_cyclesManager, ai1.m_cyclesManager, mutationProb),
+	m_normalizer(ai0.m_normalizer, ai1.m_normalizer, mutationProb),
+	m_score((ai0.m_score + ai1.m_score) / 2.0f) { }
+
 void AI::save(const char* location) const {
 	toSaveData().saveToDisk(location);
 }
@@ -68,9 +76,9 @@ AISaveData AI::toSaveData() const {
 	return std::move(sd);
 }
 
-int AI::cycles(int current, int max) {
-	std::vector<float> input = { (float) current, (float) max };
-	return (int) std::floor(m_cyclesManager.feed(input).back());
+int AI::cycles(int current, int move) {
+	std::vector<float> input = { (float) current, (float) move };
+	return (int) std::abs(std::floor(m_cyclesManager.feed(input).back()));
 }
 
 float AI::analyze(const std::vector<float>& position, int cycles) {
@@ -83,14 +91,10 @@ float AI::fastLookup(const std::vector<float>& position) {
 }
 
 std::vector<float> AI::propagate(const std::vector<float>& inputPosition, int cycles) {
-	std::vector<float> pos = inputPosition;
+	std::vector<float> pos(inputPosition);
+	std::vector<float> un = { 0.0f };
 	for (int i = 0; i < cycles; ++i) {
 		pos = m_propagator.feed(pos);
-	}
-	std::vector<float> un(1);
-	for (int i = 0; i < pos.size(); ++i) {
-		un[0] = pos[i];
-		pos[i] = m_normalizer.feed(un).back();
 	}
 	return std::move(pos);
 }

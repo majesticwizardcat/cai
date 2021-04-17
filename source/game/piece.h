@@ -58,7 +58,7 @@ public:
 		case PieceType::ROOK:
 			return (0.5f + start) * color;
 		case PieceType::QUEEN:
-			return (0.9f) * color;
+			return (0.8f) * color;
 		case PieceType::KING:
 			return (1.0f + start) * color;
 		default:

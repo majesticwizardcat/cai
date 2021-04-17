@@ -23,6 +23,16 @@ struct Move {
 		rookCastleTile(other.rookCastleTile), enPassantPawn(other.enPassantPawn),
 		promotionType(other.promotionType) { }
 
+	Move& operator=(const Move& other) {
+		from = std::move(other.from);
+		to = std::move(other.to);
+		rookTile = std::move(other.rookTile);
+		rookCastleTile = std::move(other.rookCastleTile);
+		enPassantPawn = std::move(other.enPassantPawn);
+		promotionType = std::move(other.promotionType);
+		return *this;
+	}
+
 	void printMove() const;
 };
 
@@ -70,6 +80,8 @@ public:
 	bool isKingInCheck(Color color) const;
 	bool isMoveValid(const Move& m) const;
 	std::pair<bool, bool> canCastle(Color color) const;
+
+	inline int movesPlayed() const { return m_movesPlayed; }
 
 	inline std::string asString() const {
 		std::string ret;
