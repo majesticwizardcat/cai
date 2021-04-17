@@ -14,8 +14,8 @@ struct NNSaveData;
 #include <fstream>
 
 static RandomGenerator RGEN;
-const float MIN_W = -0.5f;
-const float MAX_W = 0.5f;
+const float MIN_W = -1.0f;
+const float MAX_W = 1.0f;
 const float MUTATION_TYPES = 3.0f;
 const float MUTATION_TYPE_W = 1.0f / MUTATION_TYPES;
 const float L = 2.0f;

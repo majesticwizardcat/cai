@@ -140,10 +140,10 @@ std::vector<float> NeuralNetwork::feed(const std::vector<float> input) {
 	m_layers[0].latch(input);
 
 	for (auto& l : m_layers) {
-		l.feedForward();
 		for (auto& n : l.neurons) {
 			n.value = active(n.value);
 		}
+		l.feedForward();
 	}
 
 	std::vector<float> out;

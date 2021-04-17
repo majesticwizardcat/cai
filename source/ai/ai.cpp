@@ -76,7 +76,7 @@ AISaveData AI::toSaveData() const {
 	return std::move(sd);
 }
 
-int AI::cycles(int current, int move) {
+float AI::cycles(float current, float move) {
 	std::vector<float> input = { (float) current, (float) move };
 	return (int) std::abs(std::floor(m_cyclesManager.feed(input).back()));
 }

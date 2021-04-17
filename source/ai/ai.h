@@ -63,7 +63,7 @@ public:
 
 	void save(const char* location) const;
 	AISaveData toSaveData() const;
-	int cycles(int current, int move);
+	float cycles(float current, float move);
 	float analyze(const std::vector<float>& position, int cycles);
 	float fastLookup(const std::vector<float>& position);
 	std::vector<float> propagate(const std::vector<float>& inputPosition, int cycles);
