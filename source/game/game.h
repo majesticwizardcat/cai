@@ -1,15 +1,14 @@
 #pragma once
 
 class Game;
-enum class GameResult;
+
+enum class GameResult { WHITE_WINS, BLACK_WINS, DRAW };
 
 #include "game/player.h"
 #include "game/board.h"
 
 #include <utility>
 #include <vector>
-
-enum class GameResult { WHITE_WINS, BLACK_WINS, DRAW };
 
 class Game {
 private:

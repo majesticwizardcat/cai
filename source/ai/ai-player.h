@@ -6,8 +6,7 @@ class AIPlayer;
 #include "ai/ai.h"
 #include "tools/random-generator.h"
 
-const int CYCLES_PER_SECOND = 6000;
-const int DEFAULT_CYCLES = CYCLES_PER_SECOND;
+const int DEFAULT_CYCLES = 6000;
 
 class AIPlayer : public Player {
 private:

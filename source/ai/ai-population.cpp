@@ -132,5 +132,6 @@ void AIPopulation::repopulate() {
 		int ai1 = findIndex();
 		m_population.emplace_back(m_population[ai0], m_population[ai1], pom);
 	}
+	m_generation++;
 }
 
