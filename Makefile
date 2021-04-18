@@ -7,6 +7,7 @@ MAIN = source/cai.cpp
 AI_TEST = ai-test
 FEN_TEST = fen-test
 GAME_AI_TEST = game-ai-test
+TRAINER_TEST = trainer-test
 
 default: clean
 	g++ ${INCLUDES} ${OPTIONS} ${SOURCE} ${MAIN} -o ${NAME}
@@ -34,4 +35,10 @@ clean-game-ai:
 
 game-ai: clean-game-ai
 	g++ ${INCLUDES} ${OPTIONS} ${SOURCE} tests/game-ai.cpp -o ${GAME_AI_TEST}
+
+clean-trainer-test:
+	rm -rf ${TRAINER_TEST}
+
+trainer-test: clean-trainer-test
+	g++ ${INCLUDES} ${OPTIONS} ${SOURCE} tests/trainer-test.cpp -o ${TRAINER_TEST}
 

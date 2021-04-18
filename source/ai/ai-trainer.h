@@ -7,7 +7,8 @@ class AITrainer;
 
 #include <tuple>
 
-const int CYCLES_PER_SECOND = 5000;
+const int MAX_MOVES = 100;
+const int CYCLES_PER_SECOND = 60;
 const int CYCLES_PER_MINUTE = 60 * CYCLES_PER_SECOND;
 const int CYCLES_PER_HOUR = 60 * CYCLES_PER_MINUTE;
 const int SIMPLE_CYCLES = 5 * CYCLES_PER_MINUTE;
@@ -33,6 +34,7 @@ class AITrainer {
 private:
 	AIPopulation* m_population;
 
+	inline float sessionsPerGen(float gen) const { return std::log(gen + 1.0f) + 10.0f; }
 	GameResult runGame(AI* white, AI* black, int cycles, int cyclesPerMove, bool useTime);
 	float runRandom(AI*);
 
@@ -43,6 +45,6 @@ public:
 	AITrainer(AIPopulation* population) : m_population(population) { }
 
 	inline AIPopulation* getPopulation() { return m_population; }
-	void runTraining(int sessions, int threads);
+	void runTraining(int sessions, int numberOfThreads);
 };
 

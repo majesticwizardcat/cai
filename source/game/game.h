@@ -17,13 +17,16 @@ private:
 	Player* m_black;
 	Player* m_current;
 	std::vector<std::pair<const Player*, Board>> m_moves;
+	int m_maxMoves;
 
 public:
 	Game() = delete;
 	Game(const Game& other) = delete;
+	Game(const Board& board, Player* white, Player* black)
+		: Game(board, white, black, 0) { }
 	Game(const Board& board, Player* white,
-		Player* black) : m_board(board), m_white(white),
-		m_black(black), m_current(m_white) { }
+		Player* black, int maxMoves) : m_board(board), m_white(white),
+		m_black(black), m_current(m_white), m_maxMoves(maxMoves) { }
 
 	GameResult start() { return start(true); }
 	GameResult start(bool verbose);

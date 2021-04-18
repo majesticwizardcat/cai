@@ -7,6 +7,7 @@ struct AIPopulationSaveData;
 
 #include <vector>
 #include <fstream>
+#include <iostream>
 
 const int DEFAULT_POPULATION_SIZE = 333;
 const float MIN_MUTATION_PROB = 0.0123f;
@@ -39,6 +40,7 @@ private:
 		float per = std::abs(std::cos(x)) / (x * 0.1f + 1.0f);
 		return MIN_MUTATION_PROB + MAX_MUTATION_PROB * per;
 	}
+	AI* findBest();
 
 public:
 	AIPopulation() : AIPopulation(DEFAULT_POPULATION_SIZE) { }
@@ -57,11 +59,16 @@ public:
 	void loadFromDisk(const char* location);
 	void loadFromSaveData(const AIPopulationSaveData& saveData);
 	void repopulate();
-	AI* getBestAI();
+	inline AI* getBestAI() { return findBest(); }
+	inline float getBestFitness() { return findBest()->getFitness(); }
 	inline int getGeneration() const { return m_generation; }
 	inline AI* getAI(int index) { return &m_population[index]; }
 	inline int getPopulationSize() const { return m_population.size(); }
 	inline int getTrainingSessions() const { return m_trainingSessions; }
 	inline int finishedTraining() const { return m_trainingSessions; }
+	inline void printInfo() { std::cout << "Population size: " << m_population.size() << ", Generation : "
+		<< m_generation << ", Training sessions for current generation: " << m_trainingSessions << " Best AI fitness: "
+		<< getBestFitness() << '\n';
+	}
 };
 

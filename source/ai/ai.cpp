@@ -25,7 +25,6 @@ std::string AISaveData::asString() const {
 	str += analyzer.asString() + '\n';
 	str += fastLookup.asString() + '\n';
 	str += cyclesManager.asString() + '\n';
-	str += normalizer.asString() + '\n';
 	str += std::to_string(fitness) + '\n';
 	return std::move(str);
 }
@@ -35,25 +34,22 @@ void AISaveData::loadFromStream(std::ifstream& inputFile) {
 	analyzer.loadFromStream(inputFile);
 	fastLookup.loadFromStream(inputFile);
 	cyclesManager.loadFromStream(inputFile);
-	normalizer.loadFromStream(inputFile);
 	inputFile >> fitness;
 }
 
 AI::AI() : m_propagator(PROPAGATOR_LAYOUT), m_analyzer(ANALYZER_LAYOUT),
 	m_fastLookup(FAST_LOOKUP_LAYOUT), m_cyclesManager(CYCLES_MANAGER_LAYOUT),
-	m_normalizer(NORMALIZER_LAYOUT), m_fitness(0.0f) { }
+	m_fitness(0.0f) { }
 
 AI::AI(AI&& other) noexcept : m_propagator(std::move(other.m_propagator)),
 	m_analyzer(std::move(other.m_analyzer)),
 	m_fastLookup(std::move(other.m_fastLookup)),
 	m_cyclesManager(std::move(other.m_cyclesManager)),
-	m_normalizer(std::move(other.m_normalizer)),
 	m_fitness(std::move(other.m_fitness)) { }
 
 AI::AI(const AISaveData& saveData) : m_propagator(saveData.propagator),
 	m_analyzer(saveData.analyzer), m_fastLookup(saveData.fastLookup),
-	m_cyclesManager(saveData.cyclesManager), m_normalizer(saveData.normalizer),
-	m_fitness(saveData.fitness) { }
+	m_cyclesManager(saveData.cyclesManager), m_fitness(saveData.fitness) { }
 
 AI::AI(const char* location) : AI(AISaveData(location)) { }
 
@@ -62,7 +58,6 @@ AI::AI(const AI& ai0, const AI& ai1, float mutationProb)
 	m_analyzer(ai0.m_analyzer, ai1.m_analyzer, mutationProb),
 	m_fastLookup(ai0.m_fastLookup, ai1.m_fastLookup, mutationProb),
 	m_cyclesManager(ai0.m_cyclesManager, ai1.m_cyclesManager, mutationProb),
-	m_normalizer(ai0.m_normalizer, ai1.m_normalizer, mutationProb),
 	m_fitness((ai0.m_fitness + ai1.m_fitness) / 2.0f) { }
 
 void AI::save(const char* location) const {
@@ -75,7 +70,6 @@ AISaveData AI::toSaveData() const {
 	sd.analyzer = m_analyzer.toSaveData();
 	sd.fastLookup = m_fastLookup.toSaveData();
 	sd.cyclesManager = m_cyclesManager.toSaveData();
-	sd.normalizer = m_normalizer.toSaveData();
 	sd.fitness = m_fitness;
 	return std::move(sd);
 }
@@ -111,7 +105,6 @@ bool AI::operator==(const AI& other) const {
 	return	m_propagator == other.m_propagator
 		&& m_analyzer == other.m_analyzer
 		&& m_fastLookup == other.m_fastLookup
-		&& m_normalizer == other.m_normalizer
 		&& m_cyclesManager == other.m_cyclesManager;
 }
 

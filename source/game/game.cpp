@@ -4,10 +4,11 @@
 
 GameResult Game::start(bool verbose) {
 	Move m;
-	while (true) {
+	while (m_maxMoves == 0 || (m_board.movesPlayed() < m_maxMoves)) {
 		m_moves.push_back(std::make_pair(m_current, m_board));
 		if (!m_current->getMove(m_board, &m)) {
-			if (m_board.isKingInCheck(m_current->getColor())) {
+			if (m_board.getMoves(m_current->getColor()).size() > 0
+				|| m_board.isKingInCheck(m_current->getColor())) {
 				return m_current == m_white ? GameResult::WHITE_WINS
 					: GameResult::BLACK_WINS;
 			}

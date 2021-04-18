@@ -16,9 +16,6 @@ bool AIPlayer::getMove(const Board& board, Move* move) {
 		next.playMove(m);
 		std::vector<float> values = next.asFloats();
 		float val = m_ai->fastLookup(values);
-		if (std::isnan(val) || std::isinf(val)) {
-			std::cout << "Bad value lookup" << '\n';
-		}
 		nextPositions.push_back(std::make_tuple(m, m_ai->fastLookup(values), std::move(next.asFloats())));
 	}
 	int cyclesToUse = m_cyclesPerMove > 0 ? m_cyclesPerMove
@@ -36,9 +33,6 @@ bool AIPlayer::getMove(const Board& board, Move* move) {
 	for (int i = 1; i < nextPositions.size(); ++i) {
 		per = (float) ((float) (nextPositions.size() - i - 1) / (float) (nextPositions.size()));
 		float val = m_ai->analyze(std::get<2>(nextPositions[i]), per * cyclesToUse);
-		if (std::isnan(val)) {
-			std::cout << "Bad value analyzed" << '\n';
-		}
 		float value = val * std::get<1>(nextPositions[i]);
 		if ((m_color == Color::WHITE && value > bestValue)
 			|| (m_color == Color::BLACK && value < bestValue)) {
@@ -46,10 +40,11 @@ bool AIPlayer::getMove(const Board& board, Move* move) {
 			*move = std::get<0>(nextPositions[i]);
 		}
 	}
-	std::cout << "Best move value: " << bestValue << '\n';
 	if (m_useCycles) {
 		m_cycles -= cyclesToUse;
-		return false;
+		if (m_cycles <= 0) {
+			return false;
+		}
 	}
 	return true;
 }

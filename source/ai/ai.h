@@ -13,26 +13,22 @@ const std::vector<int> PROPAGATOR_LAYOUT = { 64, 100, 80, 64 };
 const std::vector<int> ANALYZER_LAYOUT = { 64, 100, 80, 30, 10, 1 };
 const std::vector<int> FAST_LOOKUP_LAYOUT = { 64, 30, 10, 1 };
 const std::vector<int> CYCLES_MANAGER_LAYOUT = { 2, 4, 3, 1 };
-const std::vector<int> NORMALIZER_LAYOUT = { 1, 3, 1 };
 
 struct AISaveData {
 	NNSaveData propagator;
 	NNSaveData analyzer;
 	NNSaveData fastLookup;
 	NNSaveData cyclesManager;
-	NNSaveData normalizer;
 	float fitness;
 
 	AISaveData() { }
 	AISaveData(const AISaveData& other) : propagator(other.propagator),
 		analyzer(other.analyzer), fastLookup(other.fastLookup),
-		cyclesManager(other.cyclesManager), normalizer(other.normalizer),
-		fitness(other.fitness) { }
+		cyclesManager(other.cyclesManager), fitness(other.fitness) { }
 	AISaveData(AISaveData&& other) : propagator(std::move(other.propagator)),
 		analyzer(std::move(other.analyzer)),
 		fastLookup(std::move(other.fastLookup)),
 		cyclesManager(std::move(other.cyclesManager)),
-		normalizer(std::move(other.normalizer)),
 		fitness(std::move(other.fitness)) { }
 	AISaveData(const char* location) {
 		loadFromDisk(location);
@@ -53,7 +49,6 @@ private:
 	NeuralNetwork m_analyzer;
 	NeuralNetwork m_fastLookup;
 	NeuralNetwork m_cyclesManager;
-	NeuralNetwork m_normalizer;
 	float m_fitness;
 
 public:

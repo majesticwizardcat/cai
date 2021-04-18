@@ -79,7 +79,7 @@ bool AIPopulation::operator==(const AIPopulation& other) const {
 	return true;
 }
 
-AI* AIPopulation::getBestAI() {
+AI* AIPopulation::findBest() {
 	auto cmp = [](const AI& ai0, const AI& ai1) {
 		return ai0.getFitness() > ai1.getFitness();
 	};
@@ -133,5 +133,6 @@ void AIPopulation::repopulate() {
 		m_population.emplace_back(m_population[ai0], m_population[ai1], pom);
 	}
 	m_generation++;
+	m_trainingSessions = 0;
 }
 
