@@ -26,7 +26,8 @@ public:
 		Player* black) : m_board(board), m_white(white),
 		m_black(black), m_current(m_white) { }
 
-	GameResult start();
+	GameResult start() { return start(true); }
+	GameResult start(bool verbose);
 	inline void printBoard() const { m_board.printBoard(); }
 };
 

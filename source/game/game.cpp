@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-GameResult Game::start() {
+GameResult Game::start(bool verbose) {
 	Move m;
 	while (true) {
 		m_moves.push_back(std::make_pair(m_current, m_board));
@@ -20,9 +20,11 @@ GameResult Game::start() {
 		else {
 			m_current = m_white;
 		}
-		std::cout << "Played: ";
-		m.printMove();
-		std::cout << '\n';
+		if (verbose) {
+			std::cout << "Played: ";
+			m.printMove();
+			std::cout << '\n';
+		}
 	}
 	return GameResult::DRAW;
 }

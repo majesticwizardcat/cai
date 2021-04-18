@@ -75,6 +75,10 @@ void NNSaveData::writeToDisk(const char* location) const {
 
 void NNSaveData::loadFromDisk(const char* location) {
 	std::ifstream inFile(location);
+	if (!inFile) {
+		std::cout << "Could not open file to load, returning..." << '\n';
+		return;
+	}
 	loadFromStream(inFile);
 	inFile.close();
 }
@@ -154,11 +158,9 @@ std::vector<float> NeuralNetwork::feed(const std::vector<float> input) {
 	return std::move(out);
 }
 
-void NeuralNetwork::buildFromParents(const NeuralNetwork& n0, const NeuralNetwork& n1,
-	float mutationProb) {
+void NeuralNetwork::buildFromParents(const NeuralNetwork& n0, const NeuralNetwork& n1, float mutationProb) {
 	m_layers.clear();
 	int layers = std::min(n0.m_layers.size(), n1.m_layers.size());
-	m_layers.reserve(layers);
 	for (int i = 0; i < layers; ++i) {
 		int neurons = std::min(n0.m_layers[i].neurons.size(), n1.m_layers[i].neurons.size());
 		m_layers.emplace_back(neurons);
@@ -166,7 +168,7 @@ void NeuralNetwork::buildFromParents(const NeuralNetwork& n0, const NeuralNetwor
 	connectForward(0, false);
 	for (int l = 0; l < m_layers.size(); ++l) {
 		for (int n = 0; n < m_layers[l].neurons.size(); ++n) {
-			for (int c = 0; n < m_layers[l].neurons[n].connections.size(); ++c) {
+			for (int c = 0; c < m_layers[l].neurons[n].connections.size(); ++c) {
 				m_layers[l].neurons[n].connections[c].weight = RGEN.get() < 0.5f
 					? n0.m_layers[l].neurons[n].connections[c].weight
 					: n1.m_layers[l].neurons[n].connections[c].weight;
@@ -177,6 +179,7 @@ void NeuralNetwork::buildFromParents(const NeuralNetwork& n0, const NeuralNetwor
 }
 
 void NeuralNetwork::buildFromLayout(const std::vector<int> layout, bool random) {
+	m_layers.clear();
 	if (layout.size() < 2) {
 		std::cout << "Error: Attempting to create neural network with less than 2 layrers -> Exiting" << '\n';
 		exit(0);
@@ -189,6 +192,7 @@ void NeuralNetwork::buildFromLayout(const std::vector<int> layout, bool random) 
 }
 
 void NeuralNetwork::buildFromSave(const NNSaveData& data) {
+	m_layers.clear();
 	buildFromLayout(data.layers, false);
 	int nextWeight = 0;
 	for (auto& l : m_layers) {
