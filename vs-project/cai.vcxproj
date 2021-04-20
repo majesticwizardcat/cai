@@ -80,14 +80,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\source\ai\ai-player.cpp" />
+    <ClCompile Include="..\source\ai\ai-population.cpp" />
+    <ClCompile Include="..\source\ai\ai-trainer.cpp" />
+    <ClCompile Include="..\source\ai\ai.cpp" />
     <ClCompile Include="..\source\ai\neural-network.cpp" />
     <ClCompile Include="..\source\cai.cpp" />
     <ClCompile Include="..\source\game\board.cpp" />
     <ClCompile Include="..\source\game\game.cpp" />
     <ClCompile Include="..\source\game\player.cpp" />
+    <ClCompile Include="..\source\tools\util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\source\ai\ai-player.h" />
+    <ClInclude Include="..\source\ai\ai-population.h" />
+    <ClInclude Include="..\source\ai\ai-trainer.h" />
+    <ClInclude Include="..\source\ai\ai.h" />
     <ClInclude Include="..\source\ai\neural-network.h" />
+    <ClInclude Include="..\source\ai\random-player.h" />
+    <ClInclude Include="..\source\cai.h" />
     <ClInclude Include="..\source\game\board.h" />
     <ClInclude Include="..\source\game\game.h" />
     <ClInclude Include="..\source\game\piece-type.h" />
