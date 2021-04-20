@@ -65,7 +65,7 @@ public:
 	inline AI* getAI(int index) { return &m_population[index]; }
 	inline int getPopulationSize() const { return m_population.size(); }
 	inline int getTrainingSessions() const { return m_trainingSessions; }
-	inline int finishedTraining() const { return m_trainingSessions; }
+	inline void finishedTraining() { m_trainingSessions++; }
 	inline void printInfo() { std::cout << "Population size: " << m_population.size() << ", Generation : "
 		<< m_generation << ", Training sessions for current generation: " << m_trainingSessions << " Best AI fitness: "
 		<< getBestFitness() << '\n';

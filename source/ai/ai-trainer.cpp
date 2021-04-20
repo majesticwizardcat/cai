@@ -36,10 +36,10 @@ float AITrainer::runRandom(AI* ai) {
 
 void AITrainer::runTraining(int sessions, int numberOfThreads) {
 	std::mutex sessionLock;
-	int sessionsDone = 0;
+	std::atomic<int> sessionsCompleted = 0;
 	auto work = [&](int workerSessions) {
 		RandomGenerator rgen;
-		while (sessionsDone < workerSessions) {
+		while (sessionsCompleted++ < workerSessions) {
 			int ai0 = std::min((int) (m_population->getPopulationSize() * rgen.get()),
 				m_population->getPopulationSize() - 1);
 			int ai1 = (ai0 + 1 + std::min((int) ((m_population->getPopulationSize() - 1) * rgen.get()),
@@ -68,10 +68,9 @@ void AITrainer::runTraining(int sessions, int numberOfThreads) {
 			white->updateFitness(whitePoints);
 			black->updateFitness(blackPoints);
 			m_population->finishedTraining();
-			sessionsDone++;
 			sessionLock.unlock();
 
-			std::cout << "\rSessions completed: " << sessionsDone << " out of: " << workerSessions;
+			std::cout << "\rSessions completed: " << sessionsCompleted << " out of: " << workerSessions;
 			std::cout.flush();
 		}
 	};
@@ -88,7 +87,7 @@ void AITrainer::runTraining(int sessions, int numberOfThreads) {
 	for (auto& thread : threads) {
 		thread.join();
 	}
-	std::cout << '\n';
+	std::cout << "\rSessions completed: " << runSessions << " out of: " << runSessions << '\n';
 	if (m_population->getTrainingSessions() >= generationSessions) {
 		std::cout << "Repopulating..." << '\n';
 		m_population->repopulate();
