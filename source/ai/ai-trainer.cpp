@@ -36,32 +36,41 @@ float AITrainer::runRandom(AI* ai) {
 
 void AITrainer::runTraining(int sessions, int numberOfThreads) {
 	std::mutex sessionLock;
-	std::atomic<int> sessionsDone = 0;
+	int sessionsDone = 0;
 	auto work = [&](int workerSessions) {
 		RandomGenerator rgen;
-		while (sessionsDone++ < workerSessions) {
+		while (sessionsDone < workerSessions) {
 			int ai0 = std::min((int) (m_population->getPopulationSize() * rgen.get()),
 				m_population->getPopulationSize() - 1);
 			int ai1 = (ai0 + 1 + std::min((int) ((m_population->getPopulationSize() - 1) * rgen.get()),
 				m_population->getPopulationSize() - 2)) % m_population->getPopulationSize();
 			AI* white = m_population->getAI(ai0);
 			AI* black = m_population->getAI(ai1);
-			float whitePoints = runRandom(white);
-			float blackPoints = runRandom(black);
-			int gameTypes = GAMES.size();
+			float whitePoints = 0.0f;
+			float blackPoints = 0.0f;
+			int gameTypes = GAMES.size() + 1;
 			int index = std::min((int) std::floor(gameTypes * rgen.get()), gameTypes - 1);
-			const auto& game = GAMES[index];
-			GameResult result = runGame(white, black, std::get<0>(game), std::get<1>(game), std::get<2>(game));
-			if (result != GameResult::DRAW) {
-				float points = result == GameResult::WHITE_WINS ? std::get<3>(game) : -std::get<3>(game);
-				whitePoints += points;
-				blackPoints += -points;
+			if (index == gameTypes) {
+				whitePoints += runRandom(white);
+				blackPoints += runRandom(black);
 			}
+			else {
+				const auto& game = GAMES[index];
+				GameResult result = runGame(white, black, std::get<0>(game), std::get<1>(game), std::get<2>(game));
+				if (result != GameResult::DRAW) {
+					float points = result == GameResult::WHITE_WINS ? std::get<3>(game) : -std::get<3>(game);
+					whitePoints += points;
+					blackPoints += -points;
+				}
+			}
+
 			sessionLock.lock();
 			white->updateFitness(whitePoints);
 			black->updateFitness(blackPoints);
 			m_population->finishedTraining();
+			sessionsDone++;
 			sessionLock.unlock();
+
 			std::cout << "\rSessions completed: " << sessionsDone << " out of: " << workerSessions;
 			std::cout.flush();
 		}

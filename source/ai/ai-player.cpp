@@ -16,7 +16,7 @@ bool AIPlayer::getMove(const Board& board, Move* move) {
 		next.playMove(m);
 		std::vector<float> values = next.asFloats();
 		float val = m_ai->fastLookup(values);
-		nextPositions.push_back(std::make_tuple(m, m_ai->fastLookup(values), std::move(next.asFloats())));
+		nextPositions.push_back(std::make_tuple(m, m_ai->fastLookup(values) + m_rgen.get(0.0f, 0.1f), std::move(next.asFloats())));
 	}
 	int cyclesToUse = m_cyclesPerMove > 0 ? m_cyclesPerMove
 		: m_ai->cycles((float) m_cycles / (float) m_maxCycles, (float) board.movesPlayed() * 0.01f) * 0.7f * m_cycles;
