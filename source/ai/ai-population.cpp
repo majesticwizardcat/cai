@@ -51,6 +51,7 @@ AIPopulationSaveData AIPopulation::toSaveData() const {
 	AIPopulationSaveData sd;
 	sd.population.reserve(m_population.size());
 	sd.generation = m_generation;
+	sd.trainingSessions = m_trainingSessions;
 	for (const auto& ai : m_population) {
 		sd.population.push_back(ai.toSaveData());
 	}
@@ -81,7 +82,7 @@ bool AIPopulation::operator==(const AIPopulation& other) const {
 
 AI* AIPopulation::findBest() {
 	auto cmp = [](const AI& ai0, const AI& ai1) {
-		return ai0.getFitness() > ai1.getFitness();
+		return ai0.getFitness() < ai1.getFitness();
 	};
 	auto best = std::max_element(m_population.begin(), m_population.end(), cmp);
 	return &(*best);

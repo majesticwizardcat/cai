@@ -8,7 +8,7 @@ class AITrainer;
 #include <tuple>
 
 const int MAX_MOVES = 100;
-const int CYCLES_PER_SECOND = 600;
+const int CYCLES_PER_SECOND = 100;
 const int CYCLES_PER_MINUTE = 60 * CYCLES_PER_SECOND;
 const int CYCLES_PER_HOUR = 60 * CYCLES_PER_MINUTE;
 const int RANDOM_CYCLES = 10 * CYCLES_PER_SECOND;
