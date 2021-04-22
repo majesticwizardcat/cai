@@ -11,6 +11,7 @@ void Cai::printInstructions() {
 		<< "\texit: terminates cai" << '\n'
 		<< "\tplay: starts a player vs player game" << '\n'
 		<< "\tperft [N]: starts a perft test with N depth" << '\n'
+		<< "\tthreads [N]: set the number of threads to [N]" << '\n'
 		<< "\tcreate [name] [size(opt)]: creates a new population" << '\n'
 		<< "\tload [name]: loads ai population" << '\n'
 		<< "\tsave: saves the current population" << '\n'
@@ -90,10 +91,14 @@ void Cai::trainPopulation(int sessions, int times) {
 	times = std::max(1, times);
 	AITrainer trainer(m_population.get());
 	for (int i = 0; i < times; ++i) {
-		trainer.runTraining(sessions, 4);
+		trainer.runTraining(sessions, m_threads);
 		savePopulation();
 	}
 	std::cout << "Training finished all sessions" << '\n';
+}
+
+void Cai::setThreads(int threads) {
+	m_threads = threads;
 }
 
 void Cai::playGameVSAI(Color playerColor) {
@@ -198,6 +203,13 @@ void Cai::processCommand(const std::string& command, const std::vector<std::stri
 			std::cout << "Bad argument for color, playing with white" << '\n';
 		}
 		playGameVSAI(Color::WHITE);
+	}
+	else if (command == "threads") {
+		if (arguments.empty() || arguments[0].empty() || !isdigit(arguments[0][0])) {
+			std::cout << "Bad arguments for threads number, run 'threads [N]'" << '\n';
+			return;
+		}
+		setThreads(atoi(arguments[0].c_str()));
 	}
 }
 

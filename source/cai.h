@@ -13,6 +13,7 @@ class Cai {
 private:
 	std::unique_ptr<AIPopulation> m_population;
 	std::string m_populationName;
+	int m_threads;
 
 	void printInstructions();
 	void playGame();
@@ -27,9 +28,10 @@ private:
 	void trainPopulation(int sessions);
 	void trainPopulation(int sesssions, int times);
 	void playGameVSAI(Color playerColor);
+	void setThreads(int threads);
 
 public:
-	Cai() : m_population(nullptr) { }
+	Cai() : m_threads(4), m_population(nullptr) { }
 
 	void start();
 };
