@@ -2,6 +2,7 @@
 
 #include "game/game.h"
 #include "ai/ai-trainer.h"
+#include "ai/ai-player.h"
 #include "tools/util.h"
 #include "tools/testing.h"
 
@@ -25,6 +26,7 @@ private:
 	void printInfo();
 	void trainPopulation(int sessions);
 	void trainPopulation(int sesssions, int times);
+	void playGameVSAI(Color playerColor);
 
 public:
 	Cai() : m_population(nullptr) { }

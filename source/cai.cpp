@@ -15,7 +15,7 @@ void Cai::printInstructions() {
 		<< "\tload [name]: loads ai population" << '\n'
 		<< "\tsave: saves the current population" << '\n'
 		<< "\tinfo: Shows current population info" << '\n'
-		<< "\tplayai: plays the current ai" << '\n'
+		<< "\tplayai [color(opt)]: plays the current ai" << '\n'
 		<< "\ttrain [sessions] [times(opt)]: runs [sessions] training sessions [times] times" << '\n';
 }
 
@@ -96,6 +96,30 @@ void Cai::trainPopulation(int sessions, int times) {
 	std::cout << "Training finished all sessions" << '\n';
 }
 
+void Cai::playGameVSAI(Color playerColor) {
+	if (!m_population) {
+		std::cout << "No population loaded, cannot play game..." << '\n';
+		return;
+	}
+	Board b;
+	b.setupBoard();
+	Color aiColor = playerColor == Color::WHITE ? Color::BLACK : Color::WHITE;
+	HumanPlayer human(playerColor);
+	AIPlayer aip(aiColor, m_population->getBestAI());
+	Player* white;
+	Player* black;
+	if (playerColor == Color::WHITE) {
+		white = &human;
+		black = &aip;
+	}
+	else {
+		white = &aip;
+		black = &human;
+	}
+	Game g(b, white, black);
+	g.start();
+}
+
 void Cai::processCommand(const std::string& command, const std::vector<std::string>& arguments) {
 	if (command == "help") {
 		printInstructions();
@@ -160,6 +184,20 @@ void Cai::processCommand(const std::string& command, const std::vector<std::stri
 			return;
 		}
 		trainPopulation(atoi(arguments[0].c_str()));
+	}
+	else if(command == "playai") {
+		if (arguments.size() >= 1 && !arguments[0].empty()) {
+			if (arguments[0] == "white") {
+				playGameVSAI(Color::WHITE);
+				return;
+			}
+			else if (arguments[0] == "black") {
+				playGameVSAI(Color::BLACK);
+				return;
+			}
+			std::cout << "Bad argument for color, playing with white" << '\n';
+		}
+		playGameVSAI(Color::WHITE);
 	}
 }
 
