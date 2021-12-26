@@ -1,4 +1,4 @@
-*.cai
+*.cai*
 depth-test
 cai
 fen-test
