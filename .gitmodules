@@ -1,0 +1,3 @@
+[submodule "nnpp"]
+	path = nnpp
+	url = https://github.com/loukoum/nnpp
