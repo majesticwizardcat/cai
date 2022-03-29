@@ -24,9 +24,8 @@ public:
 	Game(const Game& other) = delete;
 	Game(const Board& board, Player* white, Player* black)
 		: Game(board, white, black, 0) { }
-	Game(const Board& board, Player* white,
-		Player* black, int maxMoves) : m_board(board), m_white(white),
-		m_black(black), m_current(m_white), m_maxMoves(maxMoves) { }
+	Game(const Board& board, Player* white, Player* black, int maxMoves)
+		: m_board(board), m_white(white), m_black(black), m_current(m_white), m_maxMoves(maxMoves) { }
 
 	GameResult start() { return start(true); }
 	GameResult start(bool verbose);

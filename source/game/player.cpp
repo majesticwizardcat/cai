@@ -9,11 +9,13 @@ bool HumanPlayer::getMove(const Board& board, Move* move) {
 	if (moves.empty()) {
 		return false;
 	}
+
 	for (int i = 0; i < moves.size(); ++i) {
 		std::cout << i << ". ";
 		moves[i].printMove();
 		std::cout << '\n';
 	}
+
 	std::cout << "Choose move: ";
 	int moveIndex = -1;
 	std::string s;
@@ -24,6 +26,7 @@ bool HumanPlayer::getMove(const Board& board, Move* move) {
 			moveIndex = atoi(s.data());
 		}
 	} while (moveIndex < 0 || moveIndex > moves.size());
+
 	*move = std::move(moves[moveIndex]);
 	return true;
 }

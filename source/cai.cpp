@@ -47,26 +47,26 @@ void Cai::createPopulation(const std::string& name) {
 
 void Cai::createPopulation(const std::string& name, int population) {
 	if (population <= 0) {
-		m_population = std::make_unique<AIPopulation>();
+		population = DEFAULT_POPULATION;
 	}
 	else {
-		m_population = std::make_unique<AIPopulation>();
+		m_population = createCAIPopulation(name, population);
 	}
 	m_populationName = name;
 	savePopulation();
 }
 
-void Cai::savePopulation() {
+void Cai::savePopulation() const {
 	if (!m_population) {
 		std::cout << "No population loaded, cannot save..." << '\n';
 		return;
 	}
-	m_population->save(std::string(m_populationName + ".cai").c_str());
+	m_population->saveToDisk();
 	std::cout << "Saved population!" << '\n';
 }
 
 void Cai::loadPopulation(const std::string& name) {
-	m_population = std::make_unique<AIPopulation>(std::string(name + ".cai").c_str());
+	m_population = std::make_unique<CAIPopulation>(name + ".cai");
 	m_populationName = name;
 	std::cout << "Population loaded!" << '\n';
 }
@@ -89,9 +89,9 @@ void Cai::trainPopulation(int sessions, int times) {
 		return;
 	}
 	times = std::max(1, times);
-	AITrainer trainer(m_population.get());
+	AITrainer trainer(sessions, m_threads, m_population.get());
 	for (int i = 0; i < times; ++i) {
-		trainer.runTraining(sessions, m_threads);
+		trainer.run();
 		savePopulation();
 	}
 	std::cout << "Training finished all sessions" << '\n';
@@ -110,7 +110,7 @@ void Cai::playGameVSAI(Color playerColor) {
 	b.setupBoard();
 	Color aiColor = playerColor == Color::WHITE ? Color::BLACK : Color::WHITE;
 	HumanPlayer human(playerColor);
-	AIPlayer aip(aiColor, m_population->getBestAI());
+	AIPlayer aip(aiColor, &m_population->getBestNNAiConstRef(), 0, CYCLES_PER_MINUTE);
 	Player* white;
 	Player* black;
 	if (playerColor == Color::WHITE) {

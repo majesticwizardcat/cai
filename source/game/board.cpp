@@ -271,7 +271,7 @@ std::vector<Move> Board::getMovesForPiece(Color color, int x, int y) const {
 
 std::vector<Move> Board::getMoves(Color color) const {
 	std::vector<Move> moves;
-	moves.reserve(128);
+	moves.reserve(256);
 	for (int x = 0; x < m_width; ++x) {
 		for (int y = 0; y < m_height; ++y) {
 			if (m_tiles[index(x, y)].getPiece().getType() != PieceType::NONE
@@ -365,7 +365,7 @@ std::vector<Move> Board::addPromotionMoves(const Tile& from, const Tile& to) con
 	moves.emplace_back(m);
 	m.promotionType = PieceType::QUEEN;
 	moves.emplace_back(std::move(m));
-	return std::move(moves);
+	return moves;
 }
 
 std::vector<Move> Board::getPawnMoves(Color color, int sx, int sy) const {
@@ -427,7 +427,7 @@ std::vector<Move> Board::getPawnMoves(Color color, int sx, int sy) const {
 
 		}
 	}
-	return std::move(moves);
+	return moves;
 }
 
 const Tile& Board::findKing(Color c) const {
@@ -502,6 +502,15 @@ std::pair<bool, bool> Board::canCastle(Color color) const {
 	return castles;
 }
 
+bool Board::isDraw() const {
+	for (const auto& tile : m_tiles) {
+		if (tile.getPiece().getType() != PieceType::NONE && tile.getPiece().getType() != PieceType::KING) {
+			return false;
+		}
+	}
+	return true;
+}
+
 Color Board::setPosition(const std::string& fen) {
 	m_tiles.clear();
 	m_tiles.reserve(64);
@@ -538,7 +547,7 @@ Color Board::setPosition(const std::string& fen) {
 			piece.first = PieceType::PAWN;
 			break;
 		}
-		return std::move(piece);
+		return piece;
 	};
 
 	int fenIndex = 0;

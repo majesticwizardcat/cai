@@ -37,7 +37,7 @@ public:
 	inline int getY() const { return m_y; }
 	inline void pieceMoved(int move, int last) { m_piece.move(move, last); }
 	inline std::string tileString() const {
-		std::string str = {'a' + (char) m_x, '1' + (char) m_y};
+		std::string str = { 'a', static_cast<char>(m_x), '1', static_cast<char>(m_y) };
 		return str;
 	}
 };

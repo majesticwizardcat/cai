@@ -3,15 +3,18 @@
 #include "game/game.h"
 #include "ai/ai-trainer.h"
 #include "ai/ai-player.h"
+#include "ai/cai-population.h"
 #include "tools/util.h"
 #include "tools/testing.h"
 
 #include <string>
 #include <memory>
 
+static const uint DEFAULT_POPULATION = 100;
+
 class Cai {
 private:
-	std::unique_ptr<AIPopulation> m_population;
+	std::unique_ptr<CAIPopulation> m_population;
 	std::string m_populationName;
 	int m_threads;
 
@@ -22,7 +25,7 @@ private:
 	void processCommand(const std::string& command, const std::vector<std::string>& arguments);
 	void createPopulation(const std::string& name, int population);
 	void createPopulation(const std::string& name);
-	void savePopulation();
+	void savePopulation() const;
 	void loadPopulation(const std::string& name);
 	void printInfo();
 	void trainPopulation(int sessions);

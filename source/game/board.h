@@ -9,6 +9,7 @@ struct Move;
 
 #include "game/piece.h"
 #include "game/tile.h"
+
 struct Move {
 	Tile from;
 	Tile to;
@@ -37,24 +38,6 @@ struct Move {
 };
 
 class Board {
-private:
-	int m_width;
-	int m_height;
-	int m_movesPlayed;
-	std::vector<Tile> m_tiles;
-
-	inline int index(int x, int y) const { return x * m_height + y; }
-	std::vector<Move> getDirectionMoves(Color color, int sx, int sy, int dx, int dy) const;
-	std::vector<Move> getPawnMoves(Color color, int sx, int sy) const;
-	std::vector<Move> getKnightMoves(Color color, int sx, int sy) const;
-	std::vector<Move> getBishopMoves(Color color, int sx, int sy) const;
-	std::vector<Move> getRookMoves(Color color, int sx, int sy) const;
-	std::vector<Move> getQueenMoves(Color color, int sx, int sy) const;
-	std::vector<Move> getKingMoves(Color color, int sx, int sy) const;
-	std::vector<Move> getMovesForPiece(Color color, int x, int y) const;
-	std::vector<Move> addPromotionMoves(const Tile& from, const Tile& to) const;
-	const Tile& findKing(Color color) const;
-
 public:
 	Board() : Board(8, 8) { }
 	Board(int width, int height) : m_width(width), m_height(height), m_movesPlayed(0) {
@@ -80,6 +63,7 @@ public:
 	bool isKingInCheck(Color color) const;
 	bool isMoveValid(const Move& m) const;
 	std::pair<bool, bool> canCastle(Color color) const;
+	bool isDraw() const;
 
 	inline int movesPlayed() const { return m_movesPlayed; }
 
@@ -102,5 +86,23 @@ public:
 	}
 
 	Color setPosition(const std::string& fen);
+
+private:
+	int m_width;
+	int m_height;
+	int m_movesPlayed;
+	std::vector<Tile> m_tiles;
+
+	inline int index(int x, int y) const { return x * m_height + y; }
+	std::vector<Move> getDirectionMoves(Color color, int sx, int sy, int dx, int dy) const;
+	std::vector<Move> getPawnMoves(Color color, int sx, int sy) const;
+	std::vector<Move> getKnightMoves(Color color, int sx, int sy) const;
+	std::vector<Move> getBishopMoves(Color color, int sx, int sy) const;
+	std::vector<Move> getRookMoves(Color color, int sx, int sy) const;
+	std::vector<Move> getQueenMoves(Color color, int sx, int sy) const;
+	std::vector<Move> getKingMoves(Color color, int sx, int sy) const;
+	std::vector<Move> getMovesForPiece(Color color, int x, int y) const;
+	std::vector<Move> addPromotionMoves(const Tile& from, const Tile& to) const;
+	const Tile& findKing(Color color) const;
 };
 

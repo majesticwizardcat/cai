@@ -3,49 +3,52 @@
 #include <iostream>
 #include <algorithm>
 #include <tuple>
+#include <vector>
 
-bool AIPlayer::getMove(const Board& board, Move* move) {
-	std::vector<std::tuple<Move, float, std::vector<float>>> nextPositions;
+bool AIPlayer::getMove(const Board& board, Move* outMove) {
 	std::vector<Move> moves = board.getMoves(m_color);
-	if (moves.size() == 0) {
+	if (moves.empty()) {
 		return false;
 	}
+	
+	if (moves.size() == 1) {
+		*outMove = moves.back();
+		return true;
+	}
+
+	std::vector<Position> nextPositions;
 	nextPositions.reserve(moves.size());
-	for (const auto& m : moves) {
+	for (const Move& m : moves) {
 		Board next(board);
 		next.playMove(m);
 		std::vector<float> values = next.asFloats();
-		float val = m_ai->fastLookup(values);
-		nextPositions.push_back(std::make_tuple(m, m_ai->fastLookup(values) + m_rgen.get(0.0f, 0.1f), std::move(next.asFloats())));
+		float eval = fastLookup(values);
+		nextPositions.emplace_back(&m, eval, std::move(values));
 	}
-	int cyclesToUse = m_cyclesPerMove > 0 ? m_cyclesPerMove
-		: m_ai->cycles((float) m_cycles / (float) m_maxCycles, (float) board.movesPlayed() * 0.01f) * 0.7f * m_cycles;
-	auto cmp = [&](const std::tuple<const Move&, float, std::vector<float>>& p0,
-				 const std::tuple<const Move&, float, std::vector<float>>& p1) {
-		return m_color == Color::WHITE ? std::get<1>(p0) > std::get<1>(p1)
-			: std::get<1>(p0) < std::get<1>(p1);
-	};
-	std::sort(nextPositions.begin(), nextPositions.end(), cmp);
-	*move = std::get<0>(*(nextPositions.begin()));
-	float per = (float) ((float) (nextPositions.size() - 1) / (float) (nextPositions.size()));
-	float bestValue = m_ai->analyze(std::get<2>(*(nextPositions.begin())), per * cyclesToUse)
-		* std::get<1>(*(nextPositions.begin()));
-	for (int i = 1; i < nextPositions.size(); ++i) {
-		per = (float) ((float) (nextPositions.size() - i - 1) / (float) (nextPositions.size()));
-		float val = m_ai->analyze(std::get<2>(nextPositions[i]), per * cyclesToUse);
-		float value = val * std::get<1>(nextPositions[i]);
-		if ((m_color == Color::WHITE && value > bestValue)
-			|| (m_color == Color::BLACK && value < bestValue)) {
-			bestValue = value;
-			*move = std::get<0>(nextPositions[i]);
-		}
-	}
-	if (m_useCycles) {
-		m_cycles -= cyclesToUse;
-		if (m_cycles <= 0) {
+	std::sort(nextPositions.begin(), nextPositions.end());
+
+	uint cyclesToUse = calculateCyclesToUse(board, m_rgen.get(0.0f, 1.0f));
+	if (m_maxCycles > 0) {
+		if (m_cycles == 0) {
 			return false;
 		}
+
+		cyclesToUse = std::min(m_cycles, cyclesToUse);
+		m_cycles -= cyclesToUse;
 	}
+
+	uint cyclesPerPosition = std::max(1u, cyclesToUse / static_cast<uint>(nextPositions.size()));
+	const size_t lastIndex = nextPositions.size() - 1;
+	for (uint i = 0; i < cyclesToUse; i += cyclesPerPosition) {
+		assert(std::is_sorted(nextPositions.begin(), nextPositions.end()));
+		Position& currentBest = nextPositions.back();
+		currentBest.evaluation = analyze(currentBest.position, cyclesPerPosition);
+		size_t newIndex = lastIndex - 1;
+		while (newIndex > 0 && currentBest < nextPositions[newIndex--]) { }
+		if (currentBest < nextPositions[newIndex]) {
+			std::iter_swap(nextPositions.begin() + lastIndex, nextPositions.begin() + newIndex);
+		}
+	}
+	*outMove = *(nextPositions.back().move);
 	return true;
 }
-

@@ -8,12 +8,6 @@ enum class Color { WHITE, BLACK };
 enum class PieceType { NONE, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING };
 
 class Piece {
-private:
-	PieceType m_type;
-	Color m_color; 
-	int m_moves;
-	int m_lastMove;
-
 public:
 	Piece() : m_type(PieceType::NONE), m_moves(0), m_lastMove(0) { }
 	Piece(PieceType type, Color color) : m_type(type), m_color(color), m_moves(0),
@@ -75,5 +69,10 @@ public:
 	inline void move(int move, int last) { m_lastMove = last; m_moves = move; }
 	inline int getMove() const { return m_moves; }
 	inline int getLastMove() const { return m_lastMove; }
-};
 
+private:
+	PieceType m_type;
+	Color m_color; 
+	int m_moves;
+	int m_lastMove;
+};
