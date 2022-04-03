@@ -1,11 +1,22 @@
 #pragma once
 
+#include <array>
+
 enum class Color;
 enum class PieceType;
 class Piece;
 
 enum class Color { WHITE, BLACK };
 enum class PieceType { NONE, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING };
+static const std::array<PieceType, 7> PIECE_TYPES_ARRAY = {
+	PieceType::NONE,
+	PieceType::PAWN,
+	PieceType::KNIGHT,
+	PieceType::BISHOP,
+	PieceType::ROOK,
+	PieceType::QUEEN,
+	PieceType::KING,
+};
 
 class Piece {
 public:

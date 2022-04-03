@@ -1,5 +1,4 @@
 add_library(Game
-	board.cpp
 	game.cpp
 	player.cpp
 )

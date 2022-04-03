@@ -16,7 +16,7 @@ public:
 	AIPlayer(Color color, const AI* ai, uint cycles, uint cyclesPerMove)
 		: Player(color), m_ai(ai), m_cycles(cycles), m_cyclesPerMove(cyclesPerMove), m_maxCycles(cycles) { }
 
-	bool getMove(const Board& board, Move* outMove);
+	bool getMove(const ChessBoard& board, Move* outMove);
 	inline int getCycles() const { return m_cycles; }
 
 private:
@@ -78,7 +78,7 @@ private:
 		return pos;
 	}
 
-	inline uint calculateCyclesToUse(const Board& board, float randomBias) const {
+	inline uint calculateCyclesToUse(const ChessBoard& board, float randomBias) const {
 		return m_cyclesPerMove > 0 ? m_cyclesPerMove
 			: cycles(static_cast<float>(m_cycles), static_cast<float>(board.movesPlayed()), randomBias);
 	}

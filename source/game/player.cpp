@@ -3,14 +3,15 @@
 #include <iostream>
 #include <algorithm>
 
-bool HumanPlayer::getMove(const Board& board, Move* move) {
-	board.printBoard();
-	std::vector<Move> moves = board.getMoves(m_color);
-	if (moves.empty()) {
+bool HumanPlayer::getMove(const ChessBoard& board, Move* move) {
+	MovesArray moves;
+	unsigned int numberOfMoves = board.getMoves(m_color, &moves);
+	if (numberOfMoves == 0) {
 		return false;
 	}
 
-	for (int i = 0; i < moves.size(); ++i) {
+	board.printBoard();
+	for (int i = 0; i < numberOfMoves; ++i) {
 		std::cout << i << ". ";
 		moves[i].printMove();
 		std::cout << '\n';
@@ -25,7 +26,7 @@ bool HumanPlayer::getMove(const Board& board, Move* move) {
 			[](unsigned char c) { return !std::isdigit(c); }) == s.end()) {
 			moveIndex = atoi(s.data());
 		}
-	} while (moveIndex < 0 || moveIndex > moves.size());
+	} while (moveIndex < 0 || moveIndex > numberOfMoves);
 
 	*move = std::move(moves[moveIndex]);
 	return true;

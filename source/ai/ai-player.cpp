@@ -5,20 +5,22 @@
 #include <tuple>
 #include <vector>
 
-bool AIPlayer::getMove(const Board& board, Move* outMove) {
-	std::vector<Move> moves = board.getMoves(m_color);
-	if (moves.empty()) {
+bool AIPlayer::getMove(const ChessBoard& board, Move* outMove) {
+	MovesArray moves;
+	unsigned int numberOfMoves = board.getMoves(m_color, &moves);
+	if (numberOfMoves == 0) {
 		return false;
 	}
 	
-	if (moves.size() == 1) {
-		*outMove = moves.back();
+	if (numberOfMoves == 1) {
+		*outMove = std::move(moves[0]);
 		return true;
 	}
 
 	std::vector<Position> nextPositions;
 	nextPositions.reserve(moves.size());
-	for (const Move& m : moves) {
+	for (unsigned int i = 0; i < numberOfMoves; ++i) {
+		const Move& m = moves[i];
 		Board next(board);
 		next.playMove(m);
 		std::vector<float> values = next.asFloats();
@@ -49,6 +51,6 @@ bool AIPlayer::getMove(const Board& board, Move* outMove) {
 			std::iter_swap(nextPositions.begin() + lastIndex, nextPositions.begin() + newIndex);
 		}
 	}
-	*outMove = *(nextPositions.back().move);
+	*outMove = Move(*nextPositions.back().move);
 	return true;
 }

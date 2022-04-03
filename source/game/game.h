@@ -12,23 +12,22 @@ enum class GameResult { WHITE_WINS, BLACK_WINS, DRAW };
 
 class Game {
 private:
-	Board m_board;
+	ChessBoard m_board;
 	Player* m_white;
 	Player* m_black;
 	Player* m_current;
-	std::vector<std::pair<const Player*, Board>> m_moves;
+	std::vector<std::pair<const Player*, ChessBoard>> m_moves;
 	int m_maxMoves;
 
 public:
 	Game() = delete;
 	Game(const Game& other) = delete;
-	Game(const Board& board, Player* white, Player* black)
+	Game(const ChessBoard& board, Player* white, Player* black)
 		: Game(board, white, black, 0) { }
-	Game(const Board& board, Player* white, Player* black, int maxMoves)
+	Game(const ChessBoard& board, Player* white, Player* black, int maxMoves)
 		: m_board(board), m_white(white), m_black(black), m_current(m_white), m_maxMoves(maxMoves) { }
 
-	GameResult start() { return start(true); }
-	GameResult start(bool verbose);
+	GameResult start(bool verbose, bool saveMoves);
 	inline void printBoard() const { m_board.printBoard(); }
 };
 

@@ -21,12 +21,12 @@ void Cai::printInstructions() {
 }
 
 void Cai::playGame() {
-	Board b;
+	ChessBoard b;
 	b.setupBoard();
 	HumanPlayer white(Color::WHITE);
 	HumanPlayer black(Color::BLACK);
 	Game g(b, &white, &black);
-	g.start();
+	g.start(true, true);
 }
 
 void Cai::runPerft(int depth) {
@@ -37,7 +37,7 @@ void Cai::runPerft(int depth) {
 		std::cout << "Perft for depth: " << depth << " is: " << testing::perft(depth) << '\n';
 	}
 	else {
-		std::cout << "Perft for depth: " << depth << " is: " << testing::perft(fen, depth) << '\n';
+		std::cout << "Perft for depth: " << depth << " is: " << testing::perft(fen, depth, true) << '\n';
 	}
 }
 
@@ -66,7 +66,7 @@ void Cai::savePopulation() const {
 }
 
 void Cai::loadPopulation(const std::string& name) {
-	m_population = std::make_unique<CAIPopulation>(name + ".cai");
+	m_population = std::make_unique<CAIPopulation>(name);
 	m_populationName = name;
 	std::cout << "Population loaded!" << '\n';
 }
@@ -106,7 +106,7 @@ void Cai::playGameVSAI(Color playerColor) {
 		std::cout << "No population loaded, cannot play game..." << '\n';
 		return;
 	}
-	Board b;
+	ChessBoard b;
 	b.setupBoard();
 	Color aiColor = playerColor == Color::WHITE ? Color::BLACK : Color::WHITE;
 	HumanPlayer human(playerColor);
@@ -122,7 +122,7 @@ void Cai::playGameVSAI(Color playerColor) {
 		black = &human;
 	}
 	Game g(b, white, black);
-	g.start();
+	g.start(true, true);
 }
 
 void Cai::processCommand(const std::string& command, const std::vector<std::string>& arguments) {
@@ -250,4 +250,3 @@ void Cai::start() {
 int main() {
 	Cai().start();
 }
-

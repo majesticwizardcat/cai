@@ -15,7 +15,7 @@ public:
 	virtual ~Player() { }
 
 	inline Color getColor() const { return m_color; }
-	virtual bool getMove(const Board& board, Move* move) = 0;
+	virtual bool getMove(const ChessBoard& board, Move* move) = 0;
 };
 
 class HumanPlayer : public Player {
@@ -23,6 +23,6 @@ public:
 	HumanPlayer() = delete;
 	HumanPlayer(Color color) : Player(color) { }
 
-	bool getMove(const Board& board, Move* move);
+	bool getMove(const ChessBoard& board, Move* move);
 };
 

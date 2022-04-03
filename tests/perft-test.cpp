@@ -1,0 +1,120 @@
+#include "game/board.h"
+#include "tools/testing.h"
+
+#include <new>
+#include <cstdlib>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <sstream>
+#include <chrono>
+
+unsigned long long allocs = 0;
+
+void* operator new(std::size_t size) {
+	allocs++;
+	void *p = malloc(size);
+	if(!p) throw std::bad_alloc();
+	return p;
+}
+
+void* operator new[](std::size_t size) {
+	allocs++;
+	void *p = malloc(size);
+	if(!p) throw std::bad_alloc();
+	return p;
+}
+
+void* operator new[](std::size_t size, const std::nothrow_t&) throw() {
+	allocs++;
+	return malloc(size);
+}
+void* operator new(std::size_t size, const std::nothrow_t&) throw() {
+	allocs++;
+	return malloc(size);
+}
+
+
+void operator delete(void* ptr) throw() { free(ptr); }
+void operator delete(void* ptr, const std::nothrow_t&) throw() { free(ptr); }
+void operator delete[](void* ptr) throw() { free(ptr); }
+void operator delete[](void* ptr, const std::nothrow_t&) throw() { free(ptr); }
+
+struct PerftTest {
+public:
+	std::string fen;
+	unsigned int depth;
+	unsigned long long expected;
+
+	PerftTest(const std::string& fen, unsigned int depth, unsigned long long expected)
+		: fen(fen)
+		, depth(depth)
+		, expected(expected) { }
+};
+
+const std::vector<PerftTest> TESTS = {
+	PerftTest("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 0, 1),
+	PerftTest("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 1, 20),
+	PerftTest("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 2, 400),
+	PerftTest("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 3, 8902),
+	PerftTest("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 4, 197281),
+	PerftTest("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 5, 4865609),
+	PerftTest("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 6, 119060324),
+
+	PerftTest("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10", 1, 46),
+	PerftTest("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10", 2, 2079),
+	PerftTest("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10", 3, 89890),
+	PerftTest("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10", 4, 3894594),
+
+	PerftTest("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8", 1, 44),
+	PerftTest("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8", 2, 1486),
+	PerftTest("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8", 3, 62379),
+	PerftTest("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8", 4, 2103487),
+	PerftTest("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8", 5, 89941194),
+
+	PerftTest("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", 1, 48),
+	PerftTest("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", 2, 2039),
+	PerftTest("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", 3, 97862),
+	PerftTest("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", 4, 4085603),
+	PerftTest("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", 5, 193690690),
+
+	PerftTest("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ", 1, 14),
+	PerftTest("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ", 2, 191),
+	PerftTest("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ", 3, 2812),
+	PerftTest("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ", 4, 43238),
+	PerftTest("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ", 5, 674624),
+	PerftTest("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ", 6, 11030083),
+
+	PerftTest("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", 1, 6),
+	PerftTest("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", 2, 264),
+	PerftTest("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", 3, 9467),
+	PerftTest("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", 4, 422333),
+	PerftTest("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", 5, 15833292),
+};
+
+int main () {
+	assert(false); // DO NOT RUN THIS WITH DEBUG IT IS VERY SLOW
+
+	bool anyFail = false;
+	std::chrono::time_point start = std::chrono::high_resolution_clock::now();
+	const unsigned long long allocationsBeforeTests = allocs;
+	for (const PerftTest& test : TESTS) {
+		unsigned long long res = testing::perft(test.fen, test.depth, false);
+		if (test.expected != res) {
+			std::cout << "ERROR: Perft test fail: Fen: "
+				<< test.fen << ", Depth: " << test.depth << ", Expected: " << test.expected << ", Result: " << res << '\n';
+			anyFail = true;
+		}
+		else {
+			std::cout << "Fen: " << test.fen << ", Depth: " << test.depth << ", Expected: " << test.expected << " -> PASS!" << '\n';
+		}
+	}
+	const unsigned long long allocationsAfterTests = allocs;
+	std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - start;
+	std::cout << "Tests Finished!" << '\n';
+	if (!anyFail) {
+		std::cout << "All tests passed! Great success!" << '\n';
+	}
+	std::cout << "Time: " << duration.count() << '\n';
+	std::cout << "Number of heap allocations: " << allocationsBeforeTests - allocationsAfterTests << '\n';
+}

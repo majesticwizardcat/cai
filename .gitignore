@@ -10,4 +10,5 @@ vs-project/x64
 vs-project/cai.vcxproj.user
 .vscode
 build
+*.nnpp
 
