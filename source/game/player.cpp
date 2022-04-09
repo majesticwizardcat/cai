@@ -4,14 +4,14 @@
 #include <algorithm>
 
 bool HumanPlayer::getMove(const ChessBoard& board, Move* move) {
-	MovesArray moves;
-	unsigned int numberOfMoves = board.getMoves(m_color, &moves);
-	if (numberOfMoves == 0) {
+	MovesStackVector moves;
+	board.getMoves(m_color, &moves);
+	if (moves.empty()) {
 		return false;
 	}
 
 	board.printBoard();
-	for (int i = 0; i < numberOfMoves; ++i) {
+	for (int i = 0; i < moves.size(); ++i) {
 		std::cout << i << ". ";
 		moves[i].printMove();
 		std::cout << '\n';
@@ -26,7 +26,7 @@ bool HumanPlayer::getMove(const ChessBoard& board, Move* move) {
 			[](unsigned char c) { return !std::isdigit(c); }) == s.end()) {
 			moveIndex = atoi(s.data());
 		}
-	} while (moveIndex < 0 || moveIndex > numberOfMoves);
+	} while (moveIndex < 0 || moveIndex > moves.size());
 
 	*move = std::move(moves[moveIndex]);
 	return true;

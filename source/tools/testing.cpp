@@ -4,16 +4,15 @@ namespace testing {
 
 unsigned long long perft(const std::string& fen, unsigned int startingDepth, bool verbose) {
 	std::function<unsigned long long(const ChessBoard&, int, Color)> findPositions = [&](const ChessBoard& b, int depth, Color nextPlayer) {
-		MovesArray moves;
-		unsigned int numberOfMoves = b.getMoves(nextPlayer, &moves);
+		MovesStackVector moves;
+		b.getMoves(nextPlayer, &moves);
 		if (depth == 1) {
-			return static_cast<unsigned long long>(numberOfMoves);
+			return static_cast<unsigned long long>(moves.size());
 		}
 
 		unsigned long long positions = 0;
 		int curMoveIndex = 0;
-		for (unsigned int i = 0; i < numberOfMoves; ++i) {
-			const Move& m = moves[i];
+		for (const auto& m : moves) {
 			ChessBoard nextPosition(b);
 			nextPosition.playMove(m);
 			positions += findPositions(nextPosition, depth - 1, nextPlayer == Color::WHITE ? Color::BLACK : Color::WHITE);

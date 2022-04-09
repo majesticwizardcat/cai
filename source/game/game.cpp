@@ -15,8 +15,9 @@ GameResult Game::start(bool verbose, bool saveMoves) {
 		}
 
 		if (!m_current->getMove(m_board, &m)) {
-			MovesArray moves;
-			if (m_board.getMoves(m_current->getColor(), &moves) > 0 // Still have moves but no time left
+			MovesStackVector moves;
+			m_board.getMoves(m_current->getColor(), &moves);
+			if (moves.size()									   // Still have moves but no time left
 				|| m_board.isKingInCheck(m_current->getColor())) { // King is in check and no moves -> Checkmate
 				result =  m_current == m_white ? GameResult::BLACK_WINS : GameResult::WHITE_WINS;
 			}

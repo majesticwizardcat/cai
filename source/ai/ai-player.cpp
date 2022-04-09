@@ -6,24 +6,22 @@
 #include <vector>
 
 bool AIPlayer::getMove(const ChessBoard& board, Move* outMove) {
-	MovesArray moves;
-	unsigned int numberOfMoves = board.getMoves(m_color, &moves);
-	if (numberOfMoves == 0) {
+	MovesStackVector moves;
+	if (moves.empty()) {
 		return false;
 	}
 	
-	if (numberOfMoves == 1) {
+	if (moves.size() == 1) {
 		*outMove = std::move(moves[0]);
 		return true;
 	}
 
 	std::vector<Position> nextPositions;
 	nextPositions.reserve(moves.size());
-	for (unsigned int i = 0; i < numberOfMoves; ++i) {
-		const Move& m = moves[i];
+	for (const auto& m : moves) {
 		Board next(board);
 		next.playMove(m);
-		std::vector<float> values = next.asFloats();
+		NNPPStackVector<float> values = next.asFloats();
 		float eval = fastLookup(values);
 		nextPositions.emplace_back(&m, eval, std::move(values));
 	}

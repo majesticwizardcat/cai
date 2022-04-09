@@ -10,11 +10,13 @@ struct Move;
 #include <functional>
 #include <array>
 
+#include <nnpp.hpp>
+
 #include "game/piece.h"
 #include "game/tile.h"
 
 typedef Board<8, 8> ChessBoard;
-typedef std::array<Move, 256> MovesArray;
+typedef StackVector<Move, 256> MovesStackVector;
 typedef std::array<float, 8 * 8> FloatChessBoard;
 
 struct Move {
@@ -84,27 +86,25 @@ public:
 		: m_movesPlayed(other.m_movesPlayed)
 		, m_tiles(other.m_tiles) { }
 
-	unsigned int getMoves(Color color, MovesArray* outMoves) const {
-		MovesCounter movesCounter(*outMoves);
+	void getMoves(Color color, MovesStackVector* outMoves) const {
 		for (int x = 0; x < Width; ++x) {
 			for (int y = 0; y < Height; ++y) {
 				if (m_tiles[index(x, y)].getPiece().getType() != PieceType::NONE
 					&& m_tiles[index(x, y)].getPiece().getColor() == color) {
-					getMovesForPiece(color, x, y, &movesCounter);
+					getMovesForPiece(color, x, y, outMoves);
 				}
 			}
 		}
 
 		unsigned int i = 0;
-		while(i < movesCounter.currentMoves) {
-			if (!isMoveValid(movesCounter.outMoves[i])) {
-				std::swap(movesCounter.outMoves[i], movesCounter.outMoves[--movesCounter.currentMoves]);
+		while(i < outMoves->size()) {
+			if (!isMoveValid((*outMoves)[i])) {
+				outMoves->erase(i);
 			}
 			else {
 				i++;
 			}
 		}
-		return movesCounter.currentMoves;
 	}
 
 	void setupBoard() {
@@ -208,11 +208,9 @@ public:
 	std::pair<bool, bool> canCastle(Color color) const {
 		std::pair<bool, bool> castles = std::make_pair(false, false);
 		const Tile& kingTile = findKing(color);
-		MovesArray moves;
-		MovesCounter movesCounter(moves);
-		getKingMoves(color, kingTile.getX(), kingTile.getY(), &movesCounter);
-		for (unsigned int i = 0; i < movesCounter.currentMoves; ++i) {
-			const Move& m = moves[i];
+		MovesStackVector moves;
+		getKingMoves(color, kingTile.getX(), kingTile.getY(), &moves);
+		for (const Move& m : moves) {
 			if (m.rookTile.getPiece().getType() != PieceType::NONE) {
 				if (m.rookTile.getX() == 0) {
 					castles.second = true;
@@ -226,41 +224,36 @@ public:
 	}
 
 	bool isKingInCheck(Color color) const {
-		MovesArray moves;
-		MovesCounter movesCounter(moves);
+		MovesStackVector moves;
 		const Tile& kingTile = findKing(color);
-		getBishopMoves(color, kingTile.getX(), kingTile.getY(), &movesCounter);
-		for (unsigned int i = 0; i < movesCounter.currentMoves; ++i) {
-			const Move& m = moves[i];
+		getBishopMoves(color, kingTile.getX(), kingTile.getY(), &moves);
+		for (const Move& m : moves) {
 			if (m.to.getPiece().getType() == PieceType::QUEEN
 				|| m.to.getPiece().getType() == PieceType::BISHOP) {
 				return true;
 			}
 		}
 
-		movesCounter.clear();
-		getKnightMoves(color, kingTile.getX(), kingTile.getY(), &movesCounter);
-		for (unsigned int i = 0; i < movesCounter.currentMoves; ++i) {
-			const Move& m = moves[i];
+		moves.clear();
+		getKnightMoves(color, kingTile.getX(), kingTile.getY(), &moves);
+		for (const Move& m : moves) {
 			if (m.to.getPiece().getType() == PieceType::KNIGHT) {
 				return true;
 			}
 		}
 
-		movesCounter.clear();
-		getRookMoves(color, kingTile.getX(), kingTile.getY(), &movesCounter);
-		for (unsigned int i = 0; i < movesCounter.currentMoves; ++i) {
-			const Move& m = moves[i];
+		moves.clear();
+		getRookMoves(color, kingTile.getX(), kingTile.getY(), &moves);
+		for (const Move& m : moves) {
 			if (m.to.getPiece().getType() == PieceType::QUEEN
 				|| m.to.getPiece().getType() == PieceType::ROOK) {
 				return true;
 			}
 		}
 
-		movesCounter.clear();
-		getKingMoves(color, kingTile.getX(), kingTile.getY(), &movesCounter);
-		for (unsigned int i = 0; i < movesCounter.currentMoves; ++i) {
-			const Move& m = moves[i];
+		moves.clear();
+		getKingMoves(color, kingTile.getX(), kingTile.getY(), &moves);
+		for (const Move& m : moves) {
 			if (m.to.getPiece().getType() == PieceType::KING) {
 				return true;
 			}
@@ -294,11 +287,10 @@ public:
 		return std::move(ret);
 	}
 
-	inline std::vector<float> asFloats() const {
-		std::vector<float> result;
-		result.reserve(Width * Height);
+	inline NNPPStackVector<float> asFloats() const {
+		NNPPStackVector<float> result;
 		for (const auto& t : m_tiles) {
-			result.push_back(t.getPiece().getPieceFloat());
+			result.push(t.getPiece().getPieceFloat());
 		}
 		return result;
 	}
@@ -433,25 +425,6 @@ public:
 	}
 
 private:
-	struct MovesCounter {
-	public:
-		MovesArray& outMoves;
-		uint currentMoves;
-
-		MovesCounter() = delete;
-		MovesCounter(MovesArray& outMoves)
-			: outMoves(outMoves)
-			, currentMoves(0) { }
-
-		Move& addNew() {
-			return outMoves[currentMoves++];
-		}
-
-		void clear() {
-			currentMoves = 0;
-		}
-	};
-
 	int m_movesPlayed;
 	std::array<Tile, Width * Height> m_tiles;
 
@@ -471,7 +444,7 @@ private:
 		return m_tiles[0];
 	}
 
-	void getPawnMoves(Color color, int sx, int sy, MovesCounter* outMovesCounter) const {
+	void getPawnMoves(Color color, int sx, int sy, MovesStackVector* outMoves) const {
 		const Tile& from = m_tiles[index(sx, sy)];
 		int dir = color == Color::WHITE ? 1 : -1;
 		int enPas = color == Color::WHITE ? 4 : 3;
@@ -488,10 +461,10 @@ private:
 			if ((i == 0 && type == PieceType::NONE)
 				|| (i != 0 && type != PieceType::NONE && clr != color)) {
 				if (sy + dir == prom) {
-					addPromotionMoves(from, to, outMovesCounter);
+					addPromotionMoves(from, to, outMoves);
 				}
 				else {
-					Move& m = outMovesCounter->addNew();
+					Move& m = outMoves->addNew();
 					m.from = from;
 					m.to = to;
 				}
@@ -503,7 +476,7 @@ private:
 			&& sy + 2 * dir >= 0
 			&& m_tiles[index(sx, sy + 2 * dir)].getPiece().getType() == PieceType::NONE
 			&& m_tiles[index(sx, sy + dir)].getPiece().getType() == PieceType::NONE) {
-			Move& m = outMovesCounter->addNew();
+			Move& m = outMoves->addNew();
 			m.from = from;
 			m.to = m_tiles[index(sx, sy + 2 * dir)];
 		}
@@ -520,7 +493,7 @@ private:
 					&& m_tiles[index(sx + i, sy)].getPiece().getMove() == m_movesPlayed
 					&& m_tiles[index(sx + i, sy)].getPiece().getLastMove() == 0
 					&& m_tiles[index(sx + i, sy + dir)].getPiece().getType() == PieceType::NONE) {
-					Move& m = outMovesCounter->addNew();
+					Move& m = outMoves->addNew();
 					m.from = from;
 					m.to = m_tiles[index(sx + i, sy + dir)];
 					m.enPassantPawn = m_tiles[index(sx + i, sy)];
@@ -529,7 +502,7 @@ private:
 		}
 	}
 
-	void addPromotionMoves(const Tile& from, const Tile& to, MovesCounter* outMovesCounter) const {
+	void addPromotionMoves(const Tile& from, const Tile& to, MovesStackVector* outMoves) const {
 		for (PieceType type : PIECE_TYPES_ARRAY) {
 			if (type != PieceType::KNIGHT
 				&& type != PieceType::BISHOP
@@ -537,14 +510,14 @@ private:
 				&& type != PieceType::QUEEN) {
 				continue;
 			}
-			Move& m = outMovesCounter->addNew();
+			Move& m = outMoves->addNew();
 			m.from = from;
 			m.to = to;
 			m.promotionType = type;
 		}
 	}
 
-	void getDirectionMoves(Color color, int sx, int sy, int dx, int dy, MovesCounter* outMovesCounter) const {
+	void getDirectionMoves(Color color, int sx, int sy, int dx, int dy, MovesStackVector* outMoves) const {
 		int x = sx;
 		int y = sy;
 		while(true) {
@@ -557,45 +530,45 @@ private:
 			const Tile& to = m_tiles[index(x, y)];
 			if (to.getPiece().getType() != PieceType::NONE) {
 				if (to.getPiece().getColor() != color) {
-					Move& m = outMovesCounter->addNew();
+					Move& m = outMoves->addNew();
 					m.from = m_tiles[index(sx, sy)];
 					m.to = to;
 				}
 				break;
 			}
 
-			Move& m = outMovesCounter->addNew();
+			Move& m = outMoves->addNew();
 			m.from = m_tiles[index(sx, sy)];
 			m.to = to;
 		}
 	}
 
-	void getMovesForPiece(Color color, int x, int y, MovesCounter* outMovesCounter) const {
+	void getMovesForPiece(Color color, int x, int y, MovesStackVector* outMoves) const {
 		switch(m_tiles[index(x, y)].getPiece().getType()) {
 		case PieceType::PAWN:
-			getPawnMoves(color, x, y, outMovesCounter);
+			getPawnMoves(color, x, y, outMoves);
 			break;
 		case PieceType::KNIGHT:
-			getKnightMoves(color, x, y, outMovesCounter);
+			getKnightMoves(color, x, y, outMoves);
 			break;
 		case PieceType::BISHOP:
-			getBishopMoves(color, x, y, outMovesCounter);
+			getBishopMoves(color, x, y, outMoves);
 			break;
 		case PieceType::ROOK:
-			getRookMoves(color, x, y, outMovesCounter);
+			getRookMoves(color, x, y, outMoves);
 			break;
 		case PieceType::QUEEN:
-			getQueenMoves(color, x, y, outMovesCounter);
+			getQueenMoves(color, x, y, outMoves);
 			break;
 		case PieceType::KING:
-			getKingMoves(color, x, y, outMovesCounter);
+			getKingMoves(color, x, y, outMoves);
 			break;
 		default:
 			assert(false);
 		}
 	}
 
-	void getKnightMoves(Color color, int sx, int sy, MovesCounter* outMovesCounter) const {
+	void getKnightMoves(Color color, int sx, int sy, MovesStackVector* outMoves) const {
 		const Tile& from = m_tiles[index(sx, sy)];
 		for (int i = -1; i <= 1; ++i) {
 			if (i == 0) {
@@ -612,7 +585,7 @@ private:
 					const Tile& to = m_tiles[index(sx + 2 * i, sy + j)];
 					if (to.getPiece().getType() == PieceType::NONE
 						|| to.getPiece().getColor() != color) {
-						Move& m = outMovesCounter->addNew();
+						Move& m = outMoves->addNew();
 						m.from = from;
 						m.to = to;
 					}
@@ -623,7 +596,7 @@ private:
 					const Tile& to = m_tiles[index(sx + j, sy + i * 2)];
 					if (to.getPiece().getType() == PieceType::NONE
 						|| to.getPiece().getColor() != color) {
-						Move& m = outMovesCounter->addNew();
+						Move& m = outMoves->addNew();
 						m.from = from;
 						m.to = to;
 					}
@@ -632,7 +605,7 @@ private:
 		}
 	}
 
-	void getBishopMoves(Color color, int sx, int sy, MovesCounter* outMovesCounter) const {
+	void getBishopMoves(Color color, int sx, int sy, MovesStackVector* outMoves) const {
 		for (int i = -1; i <= 1; ++i) {
 			if (i == 0) {
 				continue;
@@ -642,27 +615,27 @@ private:
 				if (j == 0) {
 					continue;
 				}
-				getDirectionMoves(color, sx, sy, i, j, outMovesCounter);
+				getDirectionMoves(color, sx, sy, i, j, outMoves);
 			}
 		}
 	}
 
-	void getRookMoves(Color color, int sx, int sy, MovesCounter* outMovesCounter) const {
+	void getRookMoves(Color color, int sx, int sy, MovesStackVector* outMoves) const {
 		for (int i = -1; i <= 1; ++i) {
 			if (i == 0) {
 				continue;
 			}
-			getDirectionMoves(color, sx, sy, i, 0, outMovesCounter);
-			getDirectionMoves(color, sx, sy, 0, i, outMovesCounter);
+			getDirectionMoves(color, sx, sy, i, 0, outMoves);
+			getDirectionMoves(color, sx, sy, 0, i, outMoves);
 		}
 	}
 
-	void getQueenMoves(Color color, int sx, int sy, MovesCounter* outMovesCounter) const {
-		getBishopMoves(color, sx, sy, outMovesCounter);
-		getRookMoves(color, sx, sy, outMovesCounter);
+	void getQueenMoves(Color color, int sx, int sy, MovesStackVector* outMoves) const {
+		getBishopMoves(color, sx, sy, outMoves);
+		getRookMoves(color, sx, sy, outMoves);
 	}
 
-	void getKingMoves(Color color, int sx, int sy, MovesCounter* outMovesCounter) const {
+	void getKingMoves(Color color, int sx, int sy, MovesStackVector* outMoves) const {
 		const Tile& from = m_tiles[index(sx, sy)];
 		for (int i = -1; i <= 1; ++i) {
 			for (int j = -1; j <= 1; ++j) {
@@ -675,7 +648,7 @@ private:
 				const Tile& to = m_tiles[index(sx + i, sy + j)];
 				if (to.getPiece().getType() == PieceType::NONE
 					|| to.getPiece().getColor() != color) {
-					Move& m = outMovesCounter->addNew();
+					Move& m = outMoves->addNew();
 					m.from = from;
 					m.to = to;
 				}
@@ -696,7 +669,7 @@ private:
 				&& m_tiles[index(0, from.getY())].getPiece().getColor() == color
 				&& m_tiles[index(0, from.getY())].getPiece().getMove() == 0
 				&& empty(1, from.getX() - 1)) {
-				Move& m = outMovesCounter->addNew();
+				Move& m = outMoves->addNew();
 				m.from = from;
 				m.to = m_tiles[index(from.getX() - 2, from.getY())];
 				m.rookTile = m_tiles[index(0, from.getY())];
@@ -707,7 +680,7 @@ private:
 				&& m_tiles[index(7, from.getY())].getPiece().getColor() == color
 				&& m_tiles[index(7, from.getY())].getPiece().getMove() == 0
 				&& empty(from.getX() + 1, 6)) {
-				Move& m = outMovesCounter->addNew();
+				Move& m = outMoves->addNew();
 				m.from = from;
 				m.to = m_tiles[index(from.getX() + 2, from.getY())];
 				m.rookTile = m_tiles[index(7, from.getY())];
