@@ -65,8 +65,8 @@ std::vector<NNPPTrainingUpdate<float>> AITrainer::runSession() {
 		break;
 	}
 
-	scoreUpdates.emplace_back(white, pointsForWhite);
-	scoreUpdates.emplace_back(black, pointsForBlack);
+	scoreUpdates.emplace_back(white, pointsForWhite, false);
+	scoreUpdates.emplace_back(black, pointsForBlack, false);
 
 	{
 		std::lock_guard<std::mutex> lock(m_occupiedSetLock);
