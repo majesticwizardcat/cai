@@ -113,7 +113,7 @@ void Cai::playGameVSAI(Color playerColor) {
 	b.setupBoard();
 	Color aiColor = playerColor == Color::WHITE ? Color::BLACK : Color::WHITE;
 	HumanPlayer human(playerColor);
-	AIPlayer aip(aiColor, &m_population->getBestNNAiConstRef(), 0, 2 * CYCLES_PER_MINUTE);
+	AIPlayer aip(aiColor, &m_population->getBestNNAiConstRef(), 0, 10 * CYCLES_PER_MINUTE);
 	Player* white;
 	Player* black;
 	if (playerColor == Color::WHITE) {
@@ -125,7 +125,29 @@ void Cai::playGameVSAI(Color playerColor) {
 		black = &human;
 	}
 	Game g(b, white, black);
-	g.start(true, true);
+	GameResult result = g.start(true, true);
+	switch(result) {
+	case GameResult::WHITE_WINS:
+		std::cout << "White wins!" << '\n';
+		break;
+	case GameResult::WHITE_WINS_TIME:
+		std::cout << "White wins from time!" << '\n';
+		break;
+	case GameResult::BLACK_WINS:
+		std::cout << "Black wins!" << '\n';
+		break;
+	case GameResult::BLACK_WINS_TIME:
+		std::cout << "Black wins from time!" << '\n';
+		break;
+	case GameResult::DRAW:
+		std::cout << "Draw!" << '\n';
+		break;
+	case GameResult::DRAW_NO_MOVES:
+		std::cout << "Draw because of moves" << '\n';
+		break;
+	default:
+		break;
+	}
 }
 
 void Cai::processCommand(const std::string& command, const std::vector<std::string>& arguments) {

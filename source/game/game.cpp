@@ -42,7 +42,7 @@ GameResult Game::start(bool verbose, bool saveMoves) {
 		}
 	}
 
-	if (m_board.movesPlayed() >= m_maxMoves) {
+	if (m_maxMoves > 0 && m_board.movesPlayed() >= m_maxMoves) {
 		result = GameResult::DRAW_NO_MOVES;
 	}
 
