@@ -17,11 +17,13 @@ GameResult Game::start(bool verbose, bool saveMoves) {
 		if (!m_current->getMove(m_board, &m)) {
 			MovesStackVector moves;
 			m_board.getMoves(m_current->getColor(), &moves);
-			if (moves.size()									   // Still have moves but no time left
-				|| m_board.isKingInCheck(m_current->getColor())) { // King is in check and no moves -> Checkmate
+			if (moves.size() > 0) { // No time left
+				result =  m_current == m_white ? GameResult::BLACK_WINS_TIME : GameResult::WHITE_WINS_TIME;
+			}
+			else if (m_board.isKingInCheck(m_current->getColor())) { // King is in check and no moves -> Checkmate
 				result =  m_current == m_white ? GameResult::BLACK_WINS : GameResult::WHITE_WINS;
 			}
-			break;
+			break; // No moves but not in check -> Stalemate
 		}
 
 		m_board.playMove(m);
@@ -39,5 +41,10 @@ GameResult Game::start(bool verbose, bool saveMoves) {
 			std::cout << '\n';
 		}
 	}
+
+	if (m_board.movesPlayed() >= m_maxMoves) {
+		result = GameResult::DRAW_NO_MOVES;
+	}
+
 	return result;
 }

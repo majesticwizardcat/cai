@@ -11,11 +11,11 @@
 #include <memory>
 
 static const uint DEFAULT_POPULATION = 100;
+static const std::string CAI_EXT = ".cai";
 
 class Cai {
 private:
 	std::unique_ptr<CAIPopulation> m_population;
-	std::string m_populationName;
 	int m_threads;
 
 	void printInstructions();

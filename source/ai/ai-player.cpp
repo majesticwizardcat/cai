@@ -7,6 +7,7 @@
 
 bool AIPlayer::getMove(const ChessBoard& board, Move* outMove) {
 	MovesStackVector moves;
+	board.getMoves(m_color, &moves);
 	if (moves.empty()) {
 		return false;
 	}
@@ -25,29 +26,28 @@ bool AIPlayer::getMove(const ChessBoard& board, Move* outMove) {
 		float eval = fastLookup(values);
 		nextPositions.emplace_back(&m, eval, std::move(values));
 	}
-	std::sort(nextPositions.begin(), nextPositions.end());
 
 	uint cyclesToUse = calculateCyclesToUse(board, m_rgen.get(0.0f, 1.0f));
 	if (m_maxCycles > 0) {
 		if (m_cycles == 0) {
 			return false;
 		}
-
-		cyclesToUse = std::min(m_cycles, cyclesToUse);
-		m_cycles -= cyclesToUse;
+		cyclesToUse = std::max(static_cast<uint>(nextPositions.size()), cyclesToUse);
+		if (m_cycles < cyclesToUse) {
+			m_cycles = 0;
+		}
+		else {
+			m_cycles -= cyclesToUse;
+		}
+		assert(m_maxCycles > m_cycles);
 	}
 
 	uint cyclesPerPosition = std::max(1u, cyclesToUse / static_cast<uint>(nextPositions.size()));
-	const size_t lastIndex = nextPositions.size() - 1;
-	for (uint i = 0; i < cyclesToUse; i += cyclesPerPosition) {
-		assert(std::is_sorted(nextPositions.begin(), nextPositions.end()));
-		Position& currentBest = nextPositions.back();
-		currentBest.evaluation = analyze(currentBest.position, cyclesPerPosition);
-		size_t newIndex = lastIndex - 1;
-		while (newIndex > 0 && currentBest < nextPositions[newIndex--]) { }
-		if (currentBest < nextPositions[newIndex]) {
-			std::iter_swap(nextPositions.begin() + lastIndex, nextPositions.begin() + newIndex);
-		}
+	while (nextPositions.size() > 1) {
+		size_t rand = std::min(nextPositions.size() - 1, static_cast<size_t>(nextPositions.size() * m_rgen.get(0.0f, 1.0f)));
+		Position& pos = nextPositions[rand];
+		pos.evaluation = analyze(pos.position, cyclesPerPosition);
+		nextPositions.erase(std::min_element(nextPositions.begin(), nextPositions.end()));
 	}
 	*outMove = Move(*nextPositions.back().move);
 	return true;

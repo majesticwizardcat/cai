@@ -49,10 +49,7 @@ void Cai::createPopulation(const std::string& name, int population) {
 	if (population <= 0) {
 		population = DEFAULT_POPULATION;
 	}
-	else {
-		m_population = createCAIPopulation(name, population);
-	}
-	m_populationName = name;
+	m_population = createCAIPopulation(name + CAI_EXT, population);
 	savePopulation();
 }
 
@@ -66,8 +63,14 @@ void Cai::savePopulation() const {
 }
 
 void Cai::loadPopulation(const std::string& name) {
-	m_population = std::make_unique<CAIPopulation>(name);
-	m_populationName = name;
+	if (!m_population) {
+		m_population = createCAIPopulation(" ", 1);
+	}
+	if (!m_population->loadFromDisk(name + CAI_EXT)) {
+		std::cout << "Could not load " << name << '\n';
+		m_population.release();
+		return;
+	}
 	std::cout << "Population loaded!" << '\n';
 }
 
@@ -91,7 +94,7 @@ void Cai::trainPopulation(int sessions, int times) {
 	times = std::max(1, times);
 	AITrainer trainer(sessions, m_threads, m_population.get());
 	for (int i = 0; i < times; ++i) {
-		trainer.run();
+		trainer.run(true);
 		savePopulation();
 	}
 	std::cout << "Training finished all sessions" << '\n';
@@ -210,6 +213,9 @@ void Cai::processCommand(const std::string& command, const std::vector<std::stri
 			return;
 		}
 		setThreads(atoi(arguments[0].c_str()));
+	}
+	else {
+		std::cout << "Unknown command, type 'help' to show the help men for a list of commands" << '\n';
 	}
 }
 

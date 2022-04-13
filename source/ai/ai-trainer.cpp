@@ -9,19 +9,15 @@
 #include <functional>
 
 uint AITrainer::findAndStorePlayerIndex() {
-	uint index;
-	{
-		std::lock_guard<std::mutex> lock(m_occupiedSetLock);
+	std::lock_guard<std::mutex> lock(m_occupiedSetLock);
+	uint index = m_indexDist(m_randomDevice);
+
+	while (m_occupied.find(index) != m_occupied.end()) {
 		index = m_indexDist(m_randomDevice);
 	}
-	while (true) {
-		std::lock_guard<std::mutex> lock(m_occupiedSetLock);
-		if (m_occupied.find(index) == m_occupied.end()) {
-			m_occupied.insert(index);
-			break;
-		}
-	}
+
 	assert(index < m_trainee->getPopulationSize());
+	m_occupied.insert(index);
 	return index;
 }
 
@@ -29,12 +25,14 @@ std::vector<NNPPTrainingUpdate<float>> AITrainer::runSession() {
 	std::vector<NNPPTrainingUpdate<float>> scoreUpdates;
 	uint whitePlayerIndex = findAndStorePlayerIndex();
 	uint blackPlayerIndex = findAndStorePlayerIndex();
+
 	uint gameIndex;
 	{
 		std::lock_guard<std::mutex> lock(m_occupiedSetLock);
 		gameIndex = m_gameChoiceIndex(m_randomDevice);
 	}
 	assert(gameIndex < GAMES.size());
+
 	TrainTest test = GAMES[gameIndex];
 	AI* white = m_trainee->getNNAiPtrAt(whitePlayerIndex);
 	AI* black = m_trainee->getNNAiPtrAt(blackPlayerIndex);
@@ -42,13 +40,29 @@ std::vector<NNPPTrainingUpdate<float>> AITrainer::runSession() {
 	GameResult result = runGame(white, black, test);
 	float pointsForWhite = 0.0f;
 	float pointsForBlack = 0.0f;
-	if (result == GameResult::WHITE_WINS) {
+
+	switch (result) {
+	case GameResult::WHITE_WINS:
 		pointsForWhite = test.points;
 		pointsForBlack = -test.points;
-	}
-	else {
+		break;
+	case GameResult::WHITE_WINS_TIME:
+		pointsForWhite = test.points * TIME_WIN_MOD;
+		pointsForBlack = -test.points * TIME_WIN_MOD;
+		break;
+	case GameResult::BLACK_WINS:
 		pointsForWhite = -test.points;
 		pointsForBlack = test.points;
+		break;
+	case GameResult::BLACK_WINS_TIME:
+		pointsForWhite = -test.points * TIME_WIN_MOD;
+		pointsForBlack = test.points * TIME_WIN_MOD;
+		break;
+	case GameResult::DRAW_NO_MOVES:
+		pointsForWhite = -DRAW_NO_MOVES_POINTS_LOSS;
+		pointsForBlack = -DRAW_NO_MOVES_POINTS_LOSS;
+	default:
+		break;
 	}
 
 	scoreUpdates.emplace_back(white, pointsForWhite);

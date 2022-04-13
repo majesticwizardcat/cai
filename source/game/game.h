@@ -2,7 +2,7 @@
 
 class Game;
 
-enum class GameResult { WHITE_WINS, BLACK_WINS, DRAW };
+enum class GameResult { WHITE_WINS, BLACK_WINS, WHITE_WINS_TIME, BLACK_WINS_TIME, DRAW, DRAW_NO_MOVES };
 
 #include "game/player.h"
 #include "game/board.h"
