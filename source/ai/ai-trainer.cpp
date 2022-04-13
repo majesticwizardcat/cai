@@ -77,7 +77,11 @@ std::vector<NNPPTrainingUpdate<float>> AITrainer::runSession() {
 }
 
 uint AITrainer::sessionsTillEvolution() const {
-	return calculateSessionsToEvol();
+	uint sessionsTillEvol = calculateSessionsToEvol();
+	if (m_trainee->getSessionsTrainedThisGen() > sessionsTillEvol) {
+		return 0;
+	}
+	return sessionsTillEvol - m_trainee->getSessionsTrainedThisGen();
 }
 
 GameResult AITrainer::runGame(const AI* white, const AI* black, const TrainTest& test) {
