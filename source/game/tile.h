@@ -24,6 +24,7 @@ public:
 		m_piece.setColor(color);
 	}
 
+	inline float floatValue() const { return (1.0f - std::abs(m_x - 3.5f) * 0.1f) + (1.0f - std::abs(m_y - 3.5f) * 0.1f); }
 	inline void removePiece() { m_piece.setType(PieceType::NONE); }
 	inline const Piece& getPiece() const { return m_piece; }
 	inline int getX() const { return m_x; }

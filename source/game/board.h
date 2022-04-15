@@ -290,7 +290,7 @@ public:
 	inline NNPPStackVector<float> asFloats() const {
 		NNPPStackVector<float> result;
 		for (const auto& t : m_tiles) {
-			result.push(t.getPiece().getPieceFloat());
+			result.push(t.getPiece().getPieceFloat() * t.floatValue());
 		}
 		return result;
 	}

@@ -45,9 +45,11 @@ bool AIPlayer::getMove(const ChessBoard& board, Move* outMove) {
 	uint cyclesPerPosition = std::max(1u, cyclesToUse / static_cast<uint>(nextPositions.size()));
 	while (nextPositions.size() > 1) {
 		size_t rand = std::min(nextPositions.size() - 1, static_cast<size_t>(nextPositions.size() * m_rgen.get(0.0f, 1.0f)));
-		Position& pos = nextPositions[rand];
-		pos.evaluation = analyze(pos.position, cyclesPerPosition);
-		nextPositions.erase(std::min_element(nextPositions.begin(), nextPositions.end()));
+		analyze(&nextPositions[rand], cyclesPerPosition);
+		auto worst = m_color == Color::WHITE ? std::min_element(nextPositions.begin(), nextPositions.end())
+			: std::max_element(nextPositions.begin(), nextPositions.end());
+		assert(!std::isnan(worst->evaluation));
+		nextPositions.erase(worst);
 	}
 	*outMove = Move(*nextPositions.back().move);
 	return true;

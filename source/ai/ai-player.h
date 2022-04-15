@@ -10,6 +10,8 @@ class AIPlayer;
 
 typedef NNAi<float> AI;
 
+const float REDUCTION = 1000.0f;
+
 class AIPlayer : public Player {
 public:
 	AIPlayer() = delete;
@@ -23,19 +25,19 @@ private:
 	struct Position {
 		const Move* move;
 		float evaluation;
-		NNPPStackVector<float> position;
+		NNPPStackVector<float> board;
 
 		Position() = delete;
 		Position(const Position& other) = delete;
-		Position(const Move* move, float eval, NNPPStackVector<float> position)
+		Position(const Move* move, float eval, NNPPStackVector<float> board)
 			: move(move)
 			, evaluation(eval)
-			, position(std::move(position)) { }
+			, board(std::move(board)) { }
 
 		Position(Position&& other)
 			: move(std::move(other.move))
 			, evaluation(std::move(other.evaluation))
-			, position(std::move(other.position)) { }
+			, board(std::move(other.board)) { }
 
 		bool operator<(const Position& other) const {
 			return evaluation < other.evaluation;
@@ -44,7 +46,7 @@ private:
 		Position& operator=(Position&& other) {
 			move = std::move(other.move);
 			evaluation = std::move(other.evaluation);
-			position = std::move(other.position);
+			board = std::move(other.board);
 			return *this;
 		}
 	};
@@ -55,8 +57,18 @@ private:
 	uint m_cyclesPerMove;
 	RandomGenerator m_rgen;
 
-	inline float fastLookup(const NNPPStackVector<float>& position) const {
-		return m_ai->feedAt(FAST_LOOKUP_NETWORK_INDEX, position)[0];
+	inline void reduce(NNPPStackVector<float>& vec) const {
+		for (uint i = 0; i < vec.size(); ++i) {
+			while (std::abs(vec[i]) > REDUCTION) {
+				vec[i] *= 0.1f;
+			}
+		}
+	}
+
+	inline float fastLookup(const NNPPStackVector<float>& board) const {
+		NNPPStackVector<float> res = m_ai->feedAt(FAST_LOOKUP_NETWORK_INDEX, board);
+		reduce(res);
+		return res[0];
 	}
 
 	inline uint cycles(float currentCycles, float currentMove, float randomBias) const {
@@ -64,18 +76,19 @@ private:
 		return static_cast<uint>(std::abs(std::floor(m_ai->feedAt(CYCLES_MANAGER_NETWORK_INDEX, input)[0])));
 	}
 
-	inline float analyze(const NNPPStackVector<float>& position, uint cycles) const {
-		NNPPStackVector<float> propagated = propagate(position, cycles);
-		return m_ai->feedAt(ANALYZER_NETWORK_INDEX, propagated)[0];
+	inline void analyze(Position* position, uint cycles) const {
+		propagate(position, cycles);
+		NNPPStackVector<float> res = m_ai->feedAt(ANALYZER_NETWORK_INDEX, position->board);
+		reduce(res);
+		position->evaluation = res[0];
 	}
 
-	inline NNPPStackVector<float> propagate(const NNPPStackVector<float>& position, uint cycles) const {
-		NNPPStackVector<float> pos(position);
+	inline void propagate(Position* position, uint cycles) const {
 		for (int i = 0; i < cycles; ++i) {
-			NNPPStackVector<float> out = m_ai->feedAt(PROPAGATOR_NETWORK_INDEX, pos);
-			pos = std::move(out);
+			NNPPStackVector<float> out = m_ai->feedAt(PROPAGATOR_NETWORK_INDEX, position->board);
+			reduce(out);
+			position->board = std::move(out);
 		}
-		return pos;
 	}
 
 	inline uint calculateCyclesToUse(const ChessBoard& board, float randomBias) const {

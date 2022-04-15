@@ -27,18 +27,15 @@ int main() {
 
 	{
 		std::unique_ptr<CAIPopulation> pop = createCAIPopulation("ai-test.cai", 150);
-		AITrainer trainer(500, 4, pop.get());
+		AITrainer trainer(13, 4, pop.get());
 		trainer.run(true);
 		pop->printInfo();
-		std::cout << "Best score: " << pop->getBestNNAiConstRef().getScore() << '\n';
 		std::cout << "Worst score: " << pop->getMinScoreNNAi().getScore() << '\n';
-		pop->saveToDisk("ai-test.cai");
 	}
 
 	{
 		std::unique_ptr<CAIPopulation> pop = std::make_unique<CAIPopulation>("ai-test.cai");
 		pop->printInfo();
-		std::cout << "Best score: " << pop->getBestNNAiConstRef().getScore() << '\n';
 		std::cout << "Worst score: " << pop->getMinScoreNNAi().getScore() << '\n';
 	}
 }

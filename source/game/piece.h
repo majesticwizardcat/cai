@@ -47,25 +47,25 @@ public:
 		return ' ';
 	}
 
-	char getPieceFloat() const {
+	float getPieceFloat() const {
 		float color = m_color == Color::WHITE ? 1.0f : -1.0f;
 		float start = 0.0f;
 		if (m_moves == 0) {
-			start = 0.05f;
+			start = 0.5f;
 		}
 		switch(m_type) {
 		case PieceType::PAWN:
-			return (0.1f + start) * color;
-		case PieceType::KNIGHT:
-			return 0.3f * color;
-		case PieceType::BISHOP:
-			return 0.4f * color;
-		case PieceType::ROOK:
-			return (0.5f + start) * color;
-		case PieceType::QUEEN:
-			return (0.8f) * color;
-		case PieceType::KING:
 			return (1.0f + start) * color;
+		case PieceType::KNIGHT:
+			return 3.0f * color;
+		case PieceType::BISHOP:
+			return 3.5f * color;
+		case PieceType::ROOK:
+			return (5.0f + start) * color;
+		case PieceType::QUEEN:
+			return (9.0f) * color;
+		case PieceType::KING:
+			return (10.0f + start) * color;
 		default:
 			return 0.0f;
 

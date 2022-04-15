@@ -4,9 +4,9 @@
 
 typedef NNPopulation<float> CAIPopulation;
 
-static const std::vector<uint> PROPAGATOR_LAYOUT = { 64, 100, 100, 80, 64 };
-static const std::vector<uint> ANALYZER_LAYOUT = { 64, 100, 80, 80, 30, 10, 1 };
-static const std::vector<uint> FAST_LOOKUP_LAYOUT = { 64, 30, 30, 10, 1 };
+static const std::vector<uint> PROPAGATOR_LAYOUT = { 64, 100, 100, 80, 70, 64 };
+static const std::vector<uint> ANALYZER_LAYOUT = { 64, 100, 80, 80, 30, 30, 10, 1 };
+static const std::vector<uint> FAST_LOOKUP_LAYOUT = { 64, 30, 30, 10, 7, 1 };
 static const std::vector<uint> CYCLES_MANAGER_LAYOUT = { 3, 3, 1 };
 
 static const uint PROPAGATOR_NETWORK_INDEX = 0;
