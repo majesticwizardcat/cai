@@ -89,6 +89,6 @@ GameResult AITrainer::runGame(const AI* white, const AI* black, const TrainTest&
 	b.setupBoard();
 	AIPlayer whitePlayer(Color::WHITE, white, test.totalCycles, test.cyclesPerMove);
 	AIPlayer blackPlayer(Color::BLACK, black, test.totalCycles, test.cyclesPerMove);
-	Game g(b, &whitePlayer, &blackPlayer, MAX_MOVES);
-	return g.start(false, false);
+	Game g(b, &whitePlayer, &blackPlayer, MAX_MOVES, false);
+	return g.start(false);
 }

@@ -2,49 +2,68 @@
 
 #include <iostream>
 
-GameResult Game::start(bool verbose, bool saveMoves) {
+GameResult Game::start(bool verbose) {
 	Move m;
-	GameResult result = GameResult::DRAW;
+
 	while (m_maxMoves <= 0 || m_board.movesPlayed() < m_maxMoves) {
-		if (saveMoves) {
-			m_moves.push_back(std::make_pair(m_current, m_board));
+		if (m_board.isDraw()) {
+			return GameResult::DRAW;
 		}
 
-		if (m_board.isDraw()) {
+		switch(m_current->getMove(m_board, &m)) {
+		case MoveResult::MOVE_OK:
+			playMove(m, verbose);
+			break;
+		case MoveResult::OUT_OF_MOVES:
+			if (m_board.isKingInCheck(m_current->getColor())) { // King is in check and no moves -> Checkmate
+				return m_current == m_white ? GameResult::BLACK_WINS : GameResult::WHITE_WINS;
+			}
+			else { // No moves but king is not in check -> Stalemate
+				return GameResult::DRAW;
+			}
+		case MoveResult::OUT_OF_TIME:
+			return  m_current == m_white ? GameResult::BLACK_WINS_TIME : GameResult::WHITE_WINS_TIME;
+		case MoveResult::REVERT_REQUEST:
+			revert();
 			break;
 		}
-
-		if (!m_current->getMove(m_board, &m)) {
-			MovesStackVector moves;
-			m_board.getMoves(m_current->getColor(), &moves);
-			if (moves.size() > 0) { // No time left
-				result =  m_current == m_white ? GameResult::BLACK_WINS_TIME : GameResult::WHITE_WINS_TIME;
-			}
-			else if (m_board.isKingInCheck(m_current->getColor())) { // King is in check and no moves -> Checkmate
-				result =  m_current == m_white ? GameResult::BLACK_WINS : GameResult::WHITE_WINS;
-			}
-			break; // No moves but not in check -> Stalemate
-		}
-
-		m_board.playMove(m);
-
-		if (m_current == m_white) {
-			m_current = m_black;
-		}
-		else {
-			m_current = m_white;
-		}
-
-		if (verbose) {
-			std::cout << "Played: ";
-			m.printMove();
-			std::cout << '\n';
-		}
 	}
 
-	if (m_maxMoves > 0 && m_board.movesPlayed() >= m_maxMoves) {
-		result = GameResult::DRAW_NO_MOVES;
+	return GameResult::DRAW_NO_MOVES;
+}
+
+void Game::nextPlayer() {
+	if (m_current == m_white) {
+		m_current = m_black;
+	}
+	else {
+		m_current = m_white;
+	}
+}
+
+void Game::playMove(const Move& move, bool verbose) {
+	if (m_storeMoves) {
+		m_boardStates.push_back(m_board);
+	}
+	m_board.playMove(move);
+
+	nextPlayer();
+
+	if (verbose) {
+		std::cout << "Played: ";
+		move.printMove();
+		std::cout << '\n';
+	}
+}
+
+void Game::revert() {
+	if (!m_storeMoves || m_boardStates.size() < 1) {
+		return;
 	}
 
-	return result;
+	m_white->revert();
+	m_black->revert();
+	m_boardStates.pop_back();
+	m_board = m_boardStates.back();
+	m_boardStates.pop_back();
 }

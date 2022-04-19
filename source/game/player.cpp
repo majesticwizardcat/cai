@@ -3,11 +3,11 @@
 #include <iostream>
 #include <algorithm>
 
-bool HumanPlayer::getMove(const ChessBoard& board, Move* move) {
+MoveResult HumanPlayer::getMove(const ChessBoard& board, Move* move) {
 	MovesStackVector moves;
 	board.getMoves(m_color, &moves);
 	if (moves.empty()) {
-		return false;
+		return MoveResult::OUT_OF_MOVES;
 	}
 
 	board.printBoard();
@@ -22,6 +22,10 @@ bool HumanPlayer::getMove(const ChessBoard& board, Move* move) {
 	std::string s;
 	do {
 		std::cin >> s;
+		if (s == "revert") {
+			return MoveResult::REVERT_REQUEST;
+		}
+
 		if (!s.empty() && std::find_if(s.begin(), s.end(),
 			[](unsigned char c) { return !std::isdigit(c); }) == s.end()) {
 			moveIndex = atoi(s.data());
@@ -29,6 +33,5 @@ bool HumanPlayer::getMove(const ChessBoard& board, Move* move) {
 	} while (moveIndex < 0 || moveIndex > moves.size());
 
 	*move = std::move(moves[moveIndex]);
-	return true;
+	return MoveResult::MOVE_OK;
 }
-

@@ -5,16 +5,18 @@
 #include <tuple>
 #include <vector>
 
-bool AIPlayer::getMove(const ChessBoard& board, Move* outMove) {
+MoveResult AIPlayer::getMove(const ChessBoard& board, Move* outMove) {
+	pushNewState();
+
 	MovesStackVector moves;
 	board.getMoves(m_color, &moves);
 	if (moves.empty()) {
-		return false;
+		return MoveResult::OUT_OF_MOVES;
 	}
 	
 	if (moves.size() == 1) {
 		*outMove = std::move(moves[0]);
-		return true;
+		return MoveResult::MOVE_OK;
 	}
 
 	std::vector<Position> nextPositions;
@@ -30,7 +32,7 @@ bool AIPlayer::getMove(const ChessBoard& board, Move* outMove) {
 	uint cyclesToUse = calculateCyclesToUse(board, m_rgen.get(0.0f, 1.0f));
 	if (m_maxCycles > 0) {
 		if (m_cycles == 0) {
-			return false;
+			return MoveResult::OUT_OF_TIME;
 		}
 		cyclesToUse = std::max(static_cast<uint>(nextPositions.size()), cyclesToUse);
 		if (m_cycles < cyclesToUse) {
@@ -52,5 +54,15 @@ bool AIPlayer::getMove(const ChessBoard& board, Move* outMove) {
 		nextPositions.erase(worst);
 	}
 	*outMove = Move(*nextPositions.back().move);
-	return true;
+	return MoveResult::MOVE_OK;
+}
+
+void AIPlayer::revert() {
+	if (m_statesStack.empty()) {
+		return;
+	}
+
+	const AIState& state = m_statesStack.back();
+	applyState(state);
+	m_statesStack.pop_back();
 }

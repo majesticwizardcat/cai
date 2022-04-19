@@ -18,8 +18,8 @@ public:
 	AIPlayer(Color color, const AI* ai, uint cycles, uint cyclesPerMove)
 		: Player(color), m_ai(ai), m_cycles(cycles), m_cyclesPerMove(cyclesPerMove), m_maxCycles(cycles) { }
 
-	bool getMove(const ChessBoard& board, Move* outMove);
-	inline int getCycles() const { return m_cycles; }
+	MoveResult getMove(const ChessBoard& board, Move* outMove);
+	void revert();
 
 private:
 	struct Position {
@@ -51,10 +51,18 @@ private:
 		}
 	};
 
+	struct AIState {
+		uint cycles;
+
+		AIState(uint cycles)
+			: cycles(cycles) { }
+	};
+
 	const AI* m_ai;
 	uint m_cycles;
 	uint m_maxCycles;
 	uint m_cyclesPerMove;
+	std::vector<AIState> m_statesStack;
 	RandomGenerator m_rgen;
 
 	inline void reduce(NNPPStackVector<float>& vec) const {
@@ -94,5 +102,13 @@ private:
 	inline uint calculateCyclesToUse(const ChessBoard& board, float randomBias) const {
 		return m_cyclesPerMove > 0 ? m_cyclesPerMove
 			: cycles(static_cast<float>(m_cycles), static_cast<float>(board.movesPlayed()), randomBias);
+	}
+	
+	inline void pushNewState() {
+		m_statesStack.emplace_back(m_cycles);
+	}
+	
+	inline void applyState(const AIState& state) {
+		m_cycles = state.cycles;
 	}
 };

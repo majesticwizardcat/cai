@@ -4,6 +4,7 @@ class Player;
 class HumanPlayer;
 
 #include "board.h"
+#include "game.h"
 
 class Player {
 protected:
@@ -15,7 +16,8 @@ public:
 	virtual ~Player() { }
 
 	inline Color getColor() const { return m_color; }
-	virtual bool getMove(const ChessBoard& board, Move* move) = 0;
+	virtual MoveResult getMove(const ChessBoard& board, Move* move) = 0;
+	virtual void revert() = 0;
 };
 
 class HumanPlayer : public Player {
@@ -23,6 +25,7 @@ public:
 	HumanPlayer() = delete;
 	HumanPlayer(Color color) : Player(color) { }
 
-	bool getMove(const ChessBoard& board, Move* move);
+	MoveResult getMove(const ChessBoard& board, Move* move);
+	void revert() { }
 };
 

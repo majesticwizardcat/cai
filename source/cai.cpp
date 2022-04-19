@@ -25,8 +25,8 @@ void Cai::playGame() {
 	b.setupBoard();
 	HumanPlayer white(Color::WHITE);
 	HumanPlayer black(Color::BLACK);
-	Game g(b, &white, &black);
-	g.start(true, true);
+	Game g(b, &white, &black, 0, true);
+	g.start(true);
 }
 
 void Cai::runPerft(int depth) {
@@ -113,7 +113,7 @@ void Cai::playGameVSAI(Color playerColor) {
 	b.setupBoard();
 	Color aiColor = playerColor == Color::WHITE ? Color::BLACK : Color::WHITE;
 	HumanPlayer human(playerColor);
-	AIPlayer aip(aiColor, &m_population->getBestNNAiConstRef(), 0, 10 * CYCLES_PER_MINUTE);
+	AIPlayer aip(aiColor, &m_population->getBestNNAiConstRef(), 0, AI_TIME);
 	Player* white;
 	Player* black;
 	if (playerColor == Color::WHITE) {
@@ -124,8 +124,8 @@ void Cai::playGameVSAI(Color playerColor) {
 		white = &aip;
 		black = &human;
 	}
-	Game g(b, white, black);
-	GameResult result = g.start(true, true);
+	Game g(b, white, black, 0, true);
+	GameResult result = g.start(true);
 	switch(result) {
 	case GameResult::WHITE_WINS:
 		std::cout << "White wins!" << '\n';

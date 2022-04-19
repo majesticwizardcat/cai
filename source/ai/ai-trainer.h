@@ -45,6 +45,7 @@ static const std::vector<TrainTest> GAMES = {
 	TrainTest(CYCLES_PER_HOUR, 0, 21.5f),
 	TrainTest(2 * CYCLES_PER_HOUR, 0, 23.5f),
 	TrainTest(4 * CYCLES_PER_HOUR, 0, 25.0f),
+	TrainTest(10 * CYCLES_PER_HOUR, 0, 50.0f),
 };
 
 class AITrainer : public NNPPTrainer<float> {
