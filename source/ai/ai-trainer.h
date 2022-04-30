@@ -68,7 +68,7 @@ private:
 	std::mutex m_occupiedSetLock;
 	std::uniform_int_distribution<uint> m_gameChoiceIndex;
 
-	inline uint calculateSessionsToEvol() const { return static_cast<uint>(m_trainee->getPopulationSize() * (1.0f + m_trainee->getGenerartion() * 0.1f)); }
+	inline uint calculateSessionsToEvol() const { return static_cast<uint>(m_trainee->getPopulationSize() * (1.0f + m_trainee->getGenerartion() * 0.001f)); }
 
 	GameResult runGame(const AI* white, const AI* black, const TrainTest& test);
 	uint findAndStorePlayerIndex();
