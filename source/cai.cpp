@@ -257,6 +257,9 @@ void Cai::processCommand(const std::string& command, const std::vector<std::stri
 	else if(command == "printlayers") {
 		printLayers();
 	}
+	else if(command == "version") {
+		std::cout << "Version: " << VERSION << '\n';
+	}
 	else {
 		std::cout << "Unknown command, type 'help' to show the help menu for a list of commands" << '\n';
 	}
