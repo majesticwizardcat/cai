@@ -26,13 +26,14 @@ private:
 	void processCommand(const std::string& command, const std::vector<std::string>& arguments);
 	void createPopulation(const std::string& name, int population);
 	void createPopulation(const std::string& name);
-	void savePopulation() const;
+	void savePopulation(bool verbose) const;
 	void loadPopulation(const std::string& name);
 	void printInfo();
 	void trainPopulation(int sessions);
 	void trainPopulation(int sesssions, int times);
 	void playGameVSAI(Color playerColor);
 	void setThreads(int threads);
+	void printLayers() const;
 
 public:
 	Cai() : m_threads(4), m_population(nullptr) { }

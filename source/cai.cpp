@@ -50,16 +50,18 @@ void Cai::createPopulation(const std::string& name, int population) {
 		population = DEFAULT_POPULATION;
 	}
 	m_population = createCAIPopulation(name + CAI_EXT, population);
-	savePopulation();
+	savePopulation(true);
 }
 
-void Cai::savePopulation() const {
+void Cai::savePopulation(bool verbose) const {
 	if (!m_population) {
 		std::cout << "No population loaded, cannot save..." << '\n';
 		return;
 	}
 	m_population->saveToDisk();
-	std::cout << "Saved population!" << '\n';
+	if (verbose) {
+		std::cout << "Saved population!" << '\n';
+	}
 }
 
 void Cai::loadPopulation(const std::string& name) {
@@ -95,7 +97,8 @@ void Cai::trainPopulation(int sessions, int times) {
 	AITrainer trainer(sessions, m_threads, m_population.get());
 	for (int i = 0; i < times; ++i) {
 		trainer.run(true);
-		savePopulation();
+		std::cout << "Full sessions of " << sessions << " completed: " << (i + 1) << "  out of: " << times << '\n';
+		savePopulation(false);
 	}
 	std::cout << "Training finished all sessions" << '\n';
 }
@@ -150,6 +153,21 @@ void Cai::playGameVSAI(Color playerColor) {
 	}
 }
 
+void Cai::printLayers() const {
+	if (!m_population) {
+		std::cout << "No population loaded" << '\n';
+		return;
+	}
+	const auto& best = m_population->getBestNNAiConstRef();
+	const auto& propagator = best.getConstRefAt(PROPAGATOR_NETWORK_INDEX);
+	const auto& analyzer = best.getConstRefAt(ANALYZER_NETWORK_INDEX);
+
+	std::cout << "Propagator: " << '\n';
+	propagator.printLayerSizes();
+	std::cout << "Analyzer: " << '\n';
+	analyzer.printLayerSizes();
+}
+
 void Cai::processCommand(const std::string& command, const std::vector<std::string>& arguments) {
 	if (command == "help") {
 		printInstructions();
@@ -188,7 +206,7 @@ void Cai::processCommand(const std::string& command, const std::vector<std::stri
 		createPopulation(arguments[0]);
 	}
 	else if (command == "save") {
-		savePopulation();
+		savePopulation(true);
 	}
 	else if (command == "load") {
 		if (arguments.empty() || arguments[0].empty()) {
@@ -236,8 +254,11 @@ void Cai::processCommand(const std::string& command, const std::vector<std::stri
 		}
 		setThreads(atoi(arguments[0].c_str()));
 	}
+	else if(command == "printlayers") {
+		printLayers();
+	}
 	else {
-		std::cout << "Unknown command, type 'help' to show the help men for a list of commands" << '\n';
+		std::cout << "Unknown command, type 'help' to show the help menu for a list of commands" << '\n';
 	}
 }
 
