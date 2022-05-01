@@ -15,11 +15,12 @@ const float REDUCTION = 1000.0f;
 class AIPlayer : public Player {
 public:
 	AIPlayer() = delete;
-	AIPlayer(Color color, const AI* ai, uint cycles, uint cyclesPerMove)
-		: Player(color), m_ai(ai), m_cycles(cycles), m_cyclesPerMove(cyclesPerMove), m_maxCycles(cycles) { }
+	AIPlayer(Color color, const AI* ai, uint cyclesPerMove)
+		: Player(color)
+		, m_ai(ai)
+		, m_cyclesPerMove(cyclesPerMove) { }
 
 	MoveResult getMove(const ChessBoard& board, Move* outMove);
-	void revert();
 
 private:
 	struct Position {
@@ -51,18 +52,8 @@ private:
 		}
 	};
 
-	struct AIState {
-		uint cycles;
-
-		AIState(uint cycles)
-			: cycles(cycles) { }
-	};
-
 	const AI* m_ai;
-	uint m_cycles;
-	uint m_maxCycles;
 	uint m_cyclesPerMove;
-	std::vector<AIState> m_statesStack;
 	RandomGenerator m_rgen;
 
 	inline void reduce(NNPPStackVector<float>& vec) const {
@@ -71,17 +62,6 @@ private:
 				vec[i] *= 0.1f;
 			}
 		}
-	}
-
-	inline float fastLookup(const NNPPStackVector<float>& board) const {
-		NNPPStackVector<float> res = m_ai->feedAt(FAST_LOOKUP_NETWORK_INDEX, board);
-		reduce(res);
-		return res[0];
-	}
-
-	inline uint cycles(float currentCycles, float currentMove, float randomBias) const {
-		const NNPPStackVector<float> input = { currentCycles, currentMove, randomBias };
-		return static_cast<uint>(std::abs(std::floor(m_ai->feedAt(CYCLES_MANAGER_NETWORK_INDEX, input)[0])));
 	}
 
 	inline void analyze(Position* position, uint cycles) const {
@@ -97,18 +77,5 @@ private:
 			reduce(out);
 			position->board = std::move(out);
 		}
-	}
-
-	inline uint calculateCyclesToUse(const ChessBoard& board, float randomBias) const {
-		return m_cyclesPerMove > 0 ? m_cyclesPerMove
-			: cycles(static_cast<float>(m_cycles), static_cast<float>(board.movesPlayed()), randomBias);
-	}
-	
-	inline void pushNewState() {
-		m_statesStack.emplace_back(m_cycles);
-	}
-	
-	inline void applyState(const AIState& state) {
-		m_cycles = state.cycles;
 	}
 };

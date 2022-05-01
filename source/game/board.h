@@ -276,7 +276,7 @@ public:
 		return false;
 	}
 
-	inline int movesPlayed() const { return m_movesPlayed; }
+	inline uint movesPlayed() const { return m_movesPlayed; }
 
 	inline std::string asString() const {
 		std::string ret;
@@ -290,7 +290,7 @@ public:
 	inline NNPPStackVector<float> asFloats() const {
 		NNPPStackVector<float> result;
 		for (const auto& t : m_tiles) {
-			result.push(t.getPiece().getPieceFloat() * t.floatValue());
+			result.push(t.getPiece().getPieceFloat());
 		}
 		return result;
 	}
@@ -425,7 +425,7 @@ public:
 	}
 
 private:
-	int m_movesPlayed;
+	uint m_movesPlayed;
 	std::array<Tile, Width * Height> m_tiles;
 
 	inline unsigned int index(int x, int y) const throw() {

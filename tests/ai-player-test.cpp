@@ -3,16 +3,16 @@
 #include "ai/ai-trainer.h"
 
 int main() {
-	AI ai(CAI_LAYERS);
+	AI ai(0, CAI_LAYERS);
 	ai.initRandomUniform(-1.0f, 1.0f);
-	AIPlayer aiPlayer(Color::WHITE, &ai, 0, 120);
+	AIPlayer aiPlayer(Color::WHITE, &ai, 120);
 	ChessBoard board;
 	Move m;
 
 	{
 		board.setupBoard();
 		board.printBoard();
-		assert(aiPlayer.getMove(board, &m));
+		assert(aiPlayer.getMove(board, &m) == MoveResult::MOVE_OK);
 		m.printMove();
 		std::cout << '\n';
 	}
@@ -20,7 +20,7 @@ int main() {
 	{
 		board.setPosition("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10");
 		board.printBoard();
-		assert(aiPlayer.getMove(board, &m));
+		assert(aiPlayer.getMove(board, &m) == MoveResult::MOVE_OK);
 		m.printMove();
 		std::cout << '\n';
 	}

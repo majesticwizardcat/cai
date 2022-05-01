@@ -12,40 +12,32 @@ class AITrainer;
 #include <unordered_set>
 #include <mutex>
 #include <random>
+#include <algorithm>
 
 const uint MAX_MOVES = 256;
-const uint CYCLES_PER_SECOND = 100;
+const uint CYCLES_PER_SECOND = 35;
 const uint CYCLES_PER_MINUTE = 60 * CYCLES_PER_SECOND;
 const uint CYCLES_PER_HOUR = 60 * CYCLES_PER_MINUTE;
-const uint RANDOM_CYCLES = 10 * CYCLES_PER_SECOND;
-const float TIME_WIN_MOD = 0.1f;
 const float DRAW_NO_MOVES_POINTS_LOSS = 3.0f;
+const float POINTS_PER_CYCLE = 0.1f;
+const float CYCLES_PER_GEN = 0.01f;
+const float SESSIONS_TO_EVOL_PER_GEN = 0.001f;
+const float MAX_MUTATION_CHANCE = 0.33f;
+const float MUTATION_FREQ_CHANGE = 0.025f;
 
 struct TrainTest {
 public:
-	uint totalCycles;
 	uint cyclesPerMove;
 	float points;
 
 	TrainTest() {}
-	TrainTest(uint totalCycles, uint cyclesPerMove, float points)
-		: totalCycles(totalCycles), cyclesPerMove(cyclesPerMove), points(points) { }
-};
-
-static const std::vector<TrainTest> GAMES = {
-	TrainTest(0, 2 * CYCLES_PER_SECOND, 10.0f),
-	TrainTest(0, 10 * CYCLES_PER_SECOND, 11.5f),
-	TrainTest(0, CYCLES_PER_MINUTE, 17.5f),
-	TrainTest(CYCLES_PER_MINUTE, 0, 3.5f),
-	TrainTest(3 * CYCLES_PER_MINUTE, 0, 5.0f),
-	TrainTest(5 * CYCLES_PER_MINUTE, 0, 10.0f),
-	TrainTest(10 * CYCLES_PER_MINUTE, 0, 15.0f),
-	TrainTest(15 * CYCLES_PER_MINUTE, 0, 17.5f),
-	TrainTest(30 * CYCLES_PER_MINUTE, 0, 20.0f),
-	TrainTest(CYCLES_PER_HOUR, 0, 21.5f),
-	TrainTest(2 * CYCLES_PER_HOUR, 0, 23.5f),
-	TrainTest(4 * CYCLES_PER_HOUR, 0, 25.0f),
-	TrainTest(10 * CYCLES_PER_HOUR, 0, 50.0f),
+	TrainTest(uint cyclesPerMove, float points)
+		: cyclesPerMove(cyclesPerMove)
+		, points(points) { }
+	
+	bool operator<(const TrainTest& other) const {
+		return cyclesPerMove < other.cyclesPerMove;
+	}
 };
 
 class AITrainer : public NNPPTrainer<float> {
@@ -53,23 +45,32 @@ public:
 	AITrainer() = delete;
 	AITrainer(const AITrainer& other) = delete;
 	AITrainer(uint sessions, uint threads, CAIPopulation* const population) 
-		: NNPPTrainer<float>(sessions, threads, population),
-		m_indexDist(0, m_trainee->getPopulationSize() - 1),
-		m_gameChoiceIndex(0, GAMES.size() - 1) { }
+		: NNPPTrainer<float>(sessions, threads, population)
+		, m_indexDist(0, m_trainee->getPopulationSize() - 1)
+		, m_realDist(0.0f, 1.0f) { }
 
 protected:
 	std::vector<NNPPTrainingUpdate<float>> runSession();
 	uint sessionsTillEvolution() const;
+	float getMutationChance() const {
+		return std::abs(std::cos(m_trainee->getGenerartion() * MUTATION_FREQ_CHANGE)) * MAX_MUTATION_CHANCE;
+	}
 
 private:
 	std::random_device m_randomDevice;
+	std::uniform_real_distribution<float> m_realDist;
 	std::uniform_int_distribution<uint> m_indexDist;
 	std::unordered_set<uint> m_occupied;
 	std::mutex m_occupiedSetLock;
-	std::uniform_int_distribution<uint> m_gameChoiceIndex;
 
-	inline uint calculateSessionsToEvol() const { return static_cast<uint>(m_trainee->getPopulationSize() * (1.0f + m_trainee->getGenerartion() * 0.001f)); }
+	inline uint calculateSessionsToEvol() const {
+		return static_cast<uint>(m_trainee->getPopulationSize() * (1.0f + m_trainee->getGenerartion() * SESSIONS_TO_EVOL_PER_GEN));
+	}
 
-	GameResult runGame(const AI* white, const AI* black, const TrainTest& test);
+	inline uint cyclesToUse() {
+		return std::min(CYCLES_PER_HOUR, CYCLES_PER_SECOND + static_cast<uint>(m_realDist(m_randomDevice) * m_trainee->getGenerartion() * CYCLES_PER_GEN));
+	}
+
+	GameResult runGame(const AI* white, const AI* black, uint cycles);
 	uint findAndStorePlayerIndex();
 };

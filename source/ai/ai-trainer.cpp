@@ -26,42 +26,38 @@ std::vector<NNPPTrainingUpdate<float>> AITrainer::runSession() {
 	uint whitePlayerIndex = findAndStorePlayerIndex();
 	uint blackPlayerIndex = findAndStorePlayerIndex();
 
-	uint gameIndex;
+	uint cycles;
 	{
 		std::lock_guard<std::mutex> lock(m_occupiedSetLock);
-		gameIndex = m_gameChoiceIndex(m_randomDevice);
+		cycles = cyclesToUse();
 	}
-	assert(gameIndex < GAMES.size());
 
-	TrainTest test = GAMES[gameIndex];
 	AI* white = m_trainee->getNNAiPtrAt(whitePlayerIndex);
 	AI* black = m_trainee->getNNAiPtrAt(blackPlayerIndex);
 
-	GameResult result = runGame(white, black, test);
+	GameResult result = runGame(white, black, cycles);
+	const float gamePoints = cycles * POINTS_PER_CYCLE;
 	float pointsForWhite = 0.0f;
 	float pointsForBlack = 0.0f;
 
 	switch (result) {
 	case GameResult::WHITE_WINS:
-		pointsForWhite = test.points;
-		pointsForBlack = -test.points;
-		break;
-	case GameResult::WHITE_WINS_TIME:
-		pointsForWhite = test.points * TIME_WIN_MOD;
-		pointsForBlack = -test.points * TIME_WIN_MOD;
+		pointsForWhite = gamePoints;
+		pointsForBlack = -gamePoints;
 		break;
 	case GameResult::BLACK_WINS:
-		pointsForWhite = -test.points;
-		pointsForBlack = test.points;
-		break;
-	case GameResult::BLACK_WINS_TIME:
-		pointsForWhite = -test.points * TIME_WIN_MOD;
-		pointsForBlack = test.points * TIME_WIN_MOD;
+		pointsForWhite = -gamePoints;
+		pointsForBlack = gamePoints;
 		break;
 	case GameResult::DRAW_NO_MOVES:
 		pointsForWhite = -DRAW_NO_MOVES_POINTS_LOSS;
 		pointsForBlack = -DRAW_NO_MOVES_POINTS_LOSS;
+		break;
 	default:
+		break;
+	case GameResult::WHITE_WINS_TIME:
+	case GameResult::BLACK_WINS_TIME:
+		assert(false);
 		break;
 	}
 
@@ -84,11 +80,11 @@ uint AITrainer::sessionsTillEvolution() const {
 	return sessionsTillEvol - m_trainee->getSessionsTrainedThisGen();
 }
 
-GameResult AITrainer::runGame(const AI* white, const AI* black, const TrainTest& test) {
+GameResult AITrainer::runGame(const AI* white, const AI* black, uint cycles) {
 	ChessBoard b;
 	b.setupBoard();
-	AIPlayer whitePlayer(Color::WHITE, white, test.totalCycles, test.cyclesPerMove);
-	AIPlayer blackPlayer(Color::BLACK, black, test.totalCycles, test.cyclesPerMove);
+	AIPlayer whitePlayer(Color::WHITE, white, cycles);
+	AIPlayer blackPlayer(Color::BLACK, black, cycles);
 	Game g(b, &whitePlayer, &blackPlayer, MAX_MOVES, false);
 	return g.start(false);
 }

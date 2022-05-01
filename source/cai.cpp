@@ -113,7 +113,7 @@ void Cai::playGameVSAI(Color playerColor) {
 	b.setupBoard();
 	Color aiColor = playerColor == Color::WHITE ? Color::BLACK : Color::WHITE;
 	HumanPlayer human(playerColor);
-	AIPlayer aip(aiColor, &m_population->getBestNNAiConstRef(), 0, AI_TIME);
+	AIPlayer aip(aiColor, &m_population->getBestNNAiConstRef(), AI_TIME);
 	Player* white;
 	Player* black;
 	if (playerColor == Color::WHITE) {

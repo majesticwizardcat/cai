@@ -6,8 +6,6 @@
 #include <vector>
 
 MoveResult AIPlayer::getMove(const ChessBoard& board, Move* outMove) {
-	pushNewState();
-
 	MovesStackVector moves;
 	board.getMoves(m_color, &moves);
 	if (moves.empty()) {
@@ -25,26 +23,13 @@ MoveResult AIPlayer::getMove(const ChessBoard& board, Move* outMove) {
 		Board next(board);
 		next.playMove(m);
 		NNPPStackVector<float> values = next.asFloats();
-		float eval = fastLookup(values);
-		nextPositions.emplace_back(&m, eval, std::move(values));
+		nextPositions.emplace_back(&m, 0.0f, std::move(values));
+		Position* pos = &nextPositions.back();
+		analyze(pos, 0);
+		pos->evaluation *= m_rgen.get(0.9f, 1.0f); // Reduce to create some random moves more possible, encapsulates the "feeling" of the ai
 	}
 
-	uint cyclesToUse = calculateCyclesToUse(board, m_rgen.get(0.0f, 1.0f));
-	if (m_maxCycles > 0) {
-		if (m_cycles == 0) {
-			return MoveResult::OUT_OF_TIME;
-		}
-		cyclesToUse = std::max(static_cast<uint>(nextPositions.size()), cyclesToUse);
-		if (m_cycles < cyclesToUse) {
-			m_cycles = 0;
-		}
-		else {
-			m_cycles -= cyclesToUse;
-		}
-		assert(m_maxCycles > m_cycles);
-	}
-
-	uint cyclesPerPosition = std::max(1u, cyclesToUse / static_cast<uint>(nextPositions.size()));
+	uint cyclesPerPosition = std::max(1u, m_cyclesPerMove / static_cast<uint>(nextPositions.size()));
 	while (nextPositions.size() > 1) {
 		size_t rand = std::min(nextPositions.size() - 1, static_cast<size_t>(nextPositions.size() * m_rgen.get(0.0f, 1.0f)));
 		analyze(&nextPositions[rand], cyclesPerPosition);
@@ -55,14 +40,4 @@ MoveResult AIPlayer::getMove(const ChessBoard& board, Move* outMove) {
 	}
 	*outMove = Move(*nextPositions.back().move);
 	return MoveResult::MOVE_OK;
-}
-
-void AIPlayer::revert() {
-	if (m_statesStack.empty()) {
-		return;
-	}
-
-	const AIState& state = m_statesStack.back();
-	applyState(state);
-	m_statesStack.pop_back();
 }

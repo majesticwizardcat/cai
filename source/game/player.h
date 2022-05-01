@@ -17,7 +17,7 @@ public:
 
 	inline Color getColor() const { return m_color; }
 	virtual MoveResult getMove(const ChessBoard& board, Move* move) = 0;
-	virtual void revert() = 0;
+	virtual void revert() { };
 };
 
 class HumanPlayer : public Player {
@@ -26,6 +26,5 @@ public:
 	HumanPlayer(Color color) : Player(color) { }
 
 	MoveResult getMove(const ChessBoard& board, Move* move);
-	void revert() { }
 };
 
