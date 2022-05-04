@@ -21,9 +21,12 @@ const uint CYCLES_PER_HOUR = 60 * CYCLES_PER_MINUTE;
 const float DRAW_NO_MOVES_POINTS_LOSS = 3.0f;
 const float POINTS_PER_CYCLE = 0.1f;
 const float CYCLES_PER_GEN = 0.01f;
-const float SESSIONS_TO_EVOL_PER_GEN = 0.001f;
+const float SESSIONS_TO_EVOL_PER_GEN = 0.035f;
 const float MAX_MUTATION_CHANCE = 0.33f;
 const float MUTATION_FREQ_CHANGE = 0.025f;
+const float LAYER_ADDITION_CHANCE = 0.7f;
+const float LAYER_MUTATION_CHANCE = 0.05f;
+const uint MAX_LAYER_MUTATION = 3;
 
 struct TrainTest {
 public:
@@ -50,10 +53,13 @@ public:
 		, m_realDist(0.0f, 1.0f) { }
 
 protected:
-	std::vector<NNPPTrainingUpdate<float>> runSession();
-	uint sessionsTillEvolution() const;
-	float getMutationChance() const {
-		return std::abs(std::cos(m_trainee->getGenerartion() * MUTATION_FREQ_CHANGE)) * MAX_MUTATION_CHANCE;
+	std::vector<NNPPTrainingUpdate<float>> runSession() override;
+	uint sessionsTillEvolution() const override;
+	void setMutationInfo(MutationInfo* mutationInfo) const override {
+		mutationInfo->weightMutationChance = getWeightMutationChance();
+		mutationInfo->maxLayersMutation = MAX_LAYER_MUTATION;
+		mutationInfo->layerAdditionChance = LAYER_ADDITION_CHANCE;
+		mutationInfo->layerMutationChance = LAYER_MUTATION_CHANCE;
 	}
 
 private:
@@ -62,6 +68,10 @@ private:
 	std::uniform_int_distribution<uint> m_indexDist;
 	std::unordered_set<uint> m_occupied;
 	std::mutex m_occupiedSetLock;
+
+	inline float getWeightMutationChance() const {
+		return std::abs(std::cos(m_trainee->getGenerartion() * MUTATION_FREQ_CHANGE)) * MAX_MUTATION_CHANCE;
+	}
 
 	inline uint calculateSessionsToEvol() const {
 		return static_cast<uint>(m_trainee->getPopulationSize() * (1.0f + m_trainee->getGenerartion() * SESSIONS_TO_EVOL_PER_GEN));
