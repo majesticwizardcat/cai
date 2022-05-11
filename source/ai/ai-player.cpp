@@ -26,7 +26,7 @@ MoveResult AIPlayer::getMove(const ChessBoard& board, Move* outMove) {
 		nextPositions.emplace_back(&m, 0.0f, std::move(values));
 		Position* pos = &nextPositions.back();
 		analyze(pos, 0);
-		pos->evaluation *= m_rgen.get(0.9f, 1.0f); // Reduce to create some random moves more possible, encapsulates the "feeling" of the ai
+		pos->evaluation *= m_rgen.get(0.95f, 1.0f); // Reduce to create some random moves more possible, encapsulates the "feeling" of the ai
 	}
 
 	uint cyclesPerPosition = std::max(1u, m_cyclesPerMove / static_cast<uint>(nextPositions.size()));

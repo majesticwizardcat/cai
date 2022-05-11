@@ -18,15 +18,15 @@ const uint MAX_MOVES = 256;
 const uint CYCLES_PER_SECOND = 35;
 const uint CYCLES_PER_MINUTE = 60 * CYCLES_PER_SECOND;
 const uint CYCLES_PER_HOUR = 60 * CYCLES_PER_MINUTE;
-const float DRAW_NO_MOVES_POINTS_LOSS = 3.0f;
-const float POINTS_PER_CYCLE = 0.1f;
+const float DRAW_NO_MOVES_POINTS_LOSS = 0.0f;
+const float POINTS_PER_CYCLE = 0.09f;
 const float CYCLES_PER_GEN = 0.01f;
-const float SESSIONS_TO_EVOL_PER_GEN = 0.035f;
-const float MAX_MUTATION_CHANCE = 0.33f;
-const float MUTATION_FREQ_CHANGE = 0.025f;
-const float LAYER_ADDITION_CHANCE = 0.7f;
-const float LAYER_MUTATION_CHANCE = 0.05f;
-const uint MAX_LAYER_MUTATION = 3;
+const float MAX_MUTATION_CHANCE = 0.2f;
+const float MUTATION_FREQ_CHANGE = 0.1f;
+const float LAYER_ADDITION_CHANCE = 1.0f;
+const float MAX_LAYER_MUTATION_CHANCE = 0.1f;
+const uint MAX_LAYER_MUTATION = 2;
+const uint GAMES_PER_POP = 10;
 
 struct TrainTest {
 public:
@@ -55,11 +55,13 @@ public:
 protected:
 	std::vector<NNPPTrainingUpdate<float>> runSession() override;
 	uint sessionsTillEvolution() const override;
+	float getAvgScoreImportance() const override { return 0.5f; }
+
 	void setMutationInfo(MutationInfo* mutationInfo) const override {
 		mutationInfo->weightMutationChance = getWeightMutationChance();
 		mutationInfo->maxLayersMutation = MAX_LAYER_MUTATION;
 		mutationInfo->layerAdditionChance = LAYER_ADDITION_CHANCE;
-		mutationInfo->layerMutationChance = LAYER_MUTATION_CHANCE;
+		mutationInfo->layerMutationChance = getLayerMutationChance();
 	}
 
 private:
@@ -69,12 +71,24 @@ private:
 	std::unordered_set<uint> m_occupied;
 	std::mutex m_occupiedSetLock;
 
+	inline static float calculateMultiplier(float score0, float score1) {
+		const float alpha = 0.007f;
+		float absDif = std::abs(score0 - score1);
+		float mul = absDif >= 300.0f ? 0.1f : std::sqrt(1.0f / std::exp(absDif * alpha));
+		assert(mul >= 0.1f);
+		return score0 > score1 ? mul : 1.0f / mul;
+	}
+
 	inline float getWeightMutationChance() const {
 		return std::abs(std::cos(m_trainee->getGenerartion() * MUTATION_FREQ_CHANGE)) * MAX_MUTATION_CHANCE;
 	}
 
 	inline uint calculateSessionsToEvol() const {
-		return static_cast<uint>(m_trainee->getPopulationSize() * (1.0f + m_trainee->getGenerartion() * SESSIONS_TO_EVOL_PER_GEN));
+		return GAMES_PER_POP * m_trainee->getPopulationSize();
+	}
+
+	inline float getLayerMutationChance() const {
+		return std::abs(std::sin(m_trainee->getGenerartion() * MUTATION_FREQ_CHANGE)) * MAX_LAYER_MUTATION_CHANCE;
 	}
 
 	inline uint cyclesToUse() {

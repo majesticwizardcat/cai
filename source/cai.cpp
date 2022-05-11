@@ -89,6 +89,7 @@ void Cai::trainPopulation(int sessions) {
 }
 
 void Cai::trainPopulation(int sessions, int times) {
+	assert(false); // Don't start cai training in debug, unless explicity needed
 	if (!m_population) {
 		std::cout << "No population loaded, cannot train..." << '\n';
 		return;
