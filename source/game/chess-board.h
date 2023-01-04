@@ -135,8 +135,6 @@ struct BoardMove {
 	// The rook coords are not needed and will be removed, reducing the BoardMove to a size of 4 bytes;
 	TileCoords from;
 	TileCoords to;
-	TileCoords rookTile;
-	TileCoords rookCastleTile;
 	TileCoords enPassantPawn;
 	TileType promotionType;
 
@@ -152,10 +150,15 @@ struct BoardMove {
 			: promotionType(EMPTY)
 			, from(from)
 			, to(to) { }
+	
+	inline bool isCastle(TileType type) const { 
+		assert(from.areValid() && to.areValid());
+		return type == KING && std::abs(from.x - to.x) == 2;
+	}
 };
-static_assert(sizeof(BoardMove) == 6);
+static_assert(sizeof(BoardMove) == 4);
 
-typedef StackVector<BoardMove, 256> MovesVector; // ~512 bytes
+typedef StackVector<BoardMove, 256> MovesVector;
 
 class ChessBoard {
 public:

@@ -174,8 +174,11 @@ void ChessBoard::printMoveOnBoard(const BoardMove& move) const {
 		}
 		return '\0';
 	};
-	if (move.rookTile.areValid()) {
-		if (move.rookCastleTile.x == 0) {
+	const BoardTile from = getTile(move.from);
+	const BoardTile to = getTile(move.to);
+
+	if (move.isCastle(from.type)) {
+		if (move.to.x == KING_LONG_CASTLE_X) {
 			std::cout << "O--O";
 		}
 		else {
@@ -183,9 +186,6 @@ void ChessBoard::printMoveOnBoard(const BoardMove& move) const {
 		}
 		return;
 	}
-
-	const BoardTile from = getTile(move.from);
-	const BoardTile to = getTile(move.to);
 
 	std::cout << static_cast<char>(from) << 'a' + move.from.x << '1' + move.from.y
 		<< " -> " << 'a' + move.to.x << '1' + move.to.y << printPromotion(move.promotionType);
@@ -237,12 +237,22 @@ void ChessBoard::playMove(const BoardMove& move) {
 			m_positionInfo.canBlackLongCastle = false;
 		}
 
-		if (move.rookTile.areValid()) {
-			assert(move.rookCastleTile.areValid());
-			BoardTile rook = getTile(move.rookTile);
-			removePiece(move.rookTile);
-			assert(getTile(move.rookCastleTile).type == EMPTY);
-			setTile(move.rookCastleTile, rook);
+		if (move.isCastle(KING)) {
+			TileCoords rookCoords(INVALID, move.from.y);
+			TileCoords rookCastleCoords(INVALID, move.from.y);
+			if (move.to.x == KING_LONG_CASTLE_X) {
+				rookCoords.x = 0;
+				rookCastleCoords.x = ROOK_LONG_CASTLE_X;
+			}
+			else {
+				assert(move.to.x == KING_SHORT_CASTLE_X);
+				rookCoords.x = 7;
+				rookCastleCoords.x = ROOK_SHORT_CASTLE_X;
+			}
+			BoardTile rook = getTile(rookCoords);
+			removePiece(rookCoords);
+			assert(getTile(rookCastleCoords).type == EMPTY);
+			setTile(rookCastleCoords, rook);
 		}
 	}
 	else if (from.type == ROOK) {
@@ -352,22 +362,20 @@ bool ChessBoard::isMoveValid(const BoardMove& move) const {
 		return false;
 	}
 
-	if (move.rookTile.areValid()) {
+	if (move.isCastle(fromTile.type)) {
 		assert(fromTile.type == KING);
 		if (isKingInCheck(fromTile.color)) { // cannot be in check at the current board before and during castling
 			return false;
 		}
 
 		BoardMove inBetween(move.from, move.to);
-		if (move.rookTile.x == 0) {
+		if (move.to.x == KING_LONG_CASTLE_X) {
 			assert(fromTile.color == WHITE ? m_positionInfo.canWhiteLongCastle : m_positionInfo.canBlackLongCastle);
-			assert(move.to.x == KING_LONG_CASTLE_X);
 			inBetween.to.x = ROOK_LONG_CASTLE_X;
 		}
 		else {
-			assert(move.rookTile.x == 7);
-			assert(fromTile.color == WHITE ? m_positionInfo.canWhiteShortCastle : m_positionInfo.canBlackShortCastle);
 			assert(move.to.x == KING_SHORT_CASTLE_X);
+			assert(fromTile.color == WHITE ? m_positionInfo.canWhiteShortCastle : m_positionInfo.canBlackShortCastle);
 			inBetween.to.x = ROOK_SHORT_CASTLE_X;
 		}
 
@@ -602,16 +610,12 @@ void ChessBoard::getKingMoves(Color color, int8_t sx, int8_t sy, MovesVector& ou
 	if (canLongCastle && isSpaceBetweenEmpty(1, sx - 1)) {
 		assert(getTile(0, sy).type == ROOK && getTile(0, sy).color == color);
 		castle.to.x = KING_LONG_CASTLE_X;
-		castle.rookTile = TileCoords(0, sy);
-		castle.rookCastleTile = TileCoords(ROOK_LONG_CASTLE_X, sy);
 		outMoves.push(castle);
 	}
 
 	if (canShortCastle && isSpaceBetweenEmpty(sx + 1, 6)) {
 		assert(getTile(7, sy).type == ROOK && getTile(7, sy).color == color);
 		castle.to.x = KING_SHORT_CASTLE_X;
-		castle.rookTile = TileCoords(7, sy);
-		castle.rookCastleTile = TileCoords(ROOK_SHORT_CASTLE_X, sy);
 		outMoves.push(castle);
 	}
 }
