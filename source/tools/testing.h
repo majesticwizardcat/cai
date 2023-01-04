@@ -1,7 +1,5 @@
 #pragma once
 
-#include "game/board.h"
-
 #include <string>
 #include <iostream>
 #include <functional>

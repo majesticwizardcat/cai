@@ -18,7 +18,6 @@ const uint MAX_MOVES = 256;
 const uint CYCLES_PER_SECOND = 35;
 const uint CYCLES_PER_MINUTE = 60 * CYCLES_PER_SECOND;
 const uint CYCLES_PER_HOUR = 60 * CYCLES_PER_MINUTE;
-const float DRAW_NO_MOVES_POINTS_LOSS = 0.0f;
 const float POINTS_PER_CYCLE = 0.09f;
 const float CYCLES_PER_GEN = 0.01f;
 const float MAX_MUTATION_CHANCE = 0.2f;
@@ -27,6 +26,8 @@ const float LAYER_ADDITION_CHANCE = 1.0f;
 const float MAX_LAYER_MUTATION_CHANCE = 0.1f;
 const uint MAX_LAYER_MUTATION = 2;
 const uint GAMES_PER_POP = 10;
+const uint TRAINING_SESSIONS_REQUIRED = GAMES_PER_POP;
+const float CHILD_REGRESSION = 0.9f;
 
 struct TrainTest {
 public:
@@ -57,11 +58,14 @@ protected:
 	uint sessionsTillEvolution() const override;
 	float getAvgScoreImportance() const override { return 0.5f; }
 
-	void setMutationInfo(MutationInfo* mutationInfo) const override {
-		mutationInfo->weightMutationChance = getWeightMutationChance();
-		mutationInfo->maxLayersMutation = MAX_LAYER_MUTATION;
-		mutationInfo->layerAdditionChance = LAYER_ADDITION_CHANCE;
-		mutationInfo->layerMutationChance = getLayerMutationChance();
+	void setEvolutionInfo(EvolutionInfo* evolutionInfo) const override {
+		NNPPTrainer<float>::setEvolutionInfo(evolutionInfo);
+		evolutionInfo->weightMutationChance = getWeightMutationChance();
+		evolutionInfo->maxLayersMutation = MAX_LAYER_MUTATION;
+		evolutionInfo->layerAdditionChance = LAYER_ADDITION_CHANCE;
+		evolutionInfo->layerMutationChance = getLayerMutationChance();
+		evolutionInfo->childRegressionPercentage = CHILD_REGRESSION;
+		evolutionInfo->minTrainingSessionsRequired = TRAINING_SESSIONS_REQUIRED;
 	}
 
 private:

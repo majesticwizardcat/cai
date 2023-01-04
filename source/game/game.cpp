@@ -3,9 +3,9 @@
 #include <iostream>
 
 GameResult Game::start(bool verbose) {
-	Move m;
+	BoardMove m;
 
-	while (m_maxMoves <= 0 || m_board.movesPlayed() < m_maxMoves) {
+	while (m_maxMoves <= 0 || m_board.getMovesPlayed() < m_maxMoves) {
 		if (m_board.isDraw()) {
 			return GameResult::DRAW;
 		}
@@ -41,7 +41,7 @@ void Game::nextPlayer() {
 	}
 }
 
-void Game::playMove(const Move& move, bool verbose) {
+void Game::playMove(const BoardMove& move, bool verbose) {
 	if (m_storeMoves) {
 		m_boardStates.push_back(m_board);
 	}
@@ -51,7 +51,7 @@ void Game::playMove(const Move& move, bool verbose) {
 
 	if (verbose) {
 		std::cout << "Played: ";
-		move.printMove();
+		m_board.printMoveOnBoard(move);
 		std::cout << '\n';
 	}
 }

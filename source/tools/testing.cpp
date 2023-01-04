@@ -1,27 +1,26 @@
 #include "tools/testing.h"
+#include "game/chess-board.h"
 
 namespace testing {
 
 unsigned long long perft(const std::string& fen, unsigned int startingDepth, bool verbose) {
-	std::function<unsigned long long(const ChessBoard&, int, Color)> findPositions = [&](const ChessBoard& b, int depth, Color nextPlayer) {
-		MovesStackVector moves;
-		b.getMoves(nextPlayer, &moves);
+	std::function<unsigned long long(const ChessBoard&, int)> findPositions = [&](const ChessBoard& b, int depth) {
+		MovesVector moves;
+		b.getNextPlayerMoves(moves);
 		if (depth == 1) {
 			return static_cast<unsigned long long>(moves.size());
 		}
 
 		unsigned long long positions = 0;
-		int curMoveIndex = 0;
 		for (const auto& m : moves) {
 			ChessBoard nextPosition(b);
 			nextPosition.playMove(m);
-			positions += findPositions(nextPosition, depth - 1, nextPlayer == Color::WHITE ? Color::BLACK : Color::WHITE);
+			positions += findPositions(nextPosition, depth - 1);
 		}
 		return positions;
 	};
 
-	ChessBoard start;
-	Color next = start.setPosition(fen);
+	ChessBoard start(fen);
 
 	if (verbose) {
 		std::cout << "Starting perft test with depth " << startingDepth << "..." << '\n';
@@ -30,7 +29,7 @@ unsigned long long perft(const std::string& fen, unsigned int startingDepth, boo
 
 	unsigned long long positionsFound = 1;
 	if (startingDepth > 0) {
-		positionsFound = findPositions(start, startingDepth, next);
+		positionsFound = findPositions(start, startingDepth);
 	}
 
 	if (verbose) {

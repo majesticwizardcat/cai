@@ -22,7 +22,6 @@ void Cai::printInstructions() {
 
 void Cai::playGame() {
 	ChessBoard b;
-	b.setupBoard();
 	HumanPlayer white(Color::WHITE);
 	HumanPlayer black(Color::BLACK);
 	Game g(b, &white, &black, 0, true);
@@ -114,7 +113,6 @@ void Cai::playGameVSAI(Color playerColor) {
 		return;
 	}
 	ChessBoard b;
-	b.setupBoard();
 	Color aiColor = playerColor == Color::WHITE ? Color::BLACK : Color::WHITE;
 	HumanPlayer human(playerColor);
 	AIPlayer aip(aiColor, &m_population->getBestNNAiConstRef(), AI_TIME);

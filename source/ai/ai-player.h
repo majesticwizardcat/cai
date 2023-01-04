@@ -20,17 +20,17 @@ public:
 		, m_ai(ai)
 		, m_cyclesPerMove(cyclesPerMove) { }
 
-	MoveResult getMove(const ChessBoard& board, Move* outMove);
+	MoveResult getMove(const ChessBoard& board, BoardMove* outMove);
 
 private:
 	struct Position {
-		const Move* move;
+		const BoardMove* move;
 		float evaluation;
 		NNPPStackVector<float> board;
 
 		Position() = delete;
 		Position(const Position& other) = delete;
-		Position(const Move* move, float eval, NNPPStackVector<float> board)
+		Position(const BoardMove* move, float eval, NNPPStackVector<float> board)
 			: move(move)
 			, evaluation(eval)
 			, board(std::move(board)) { }

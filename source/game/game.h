@@ -6,7 +6,7 @@ enum class GameResult { WHITE_WINS, BLACK_WINS, WHITE_WINS_TIME, BLACK_WINS_TIME
 enum class MoveResult { MOVE_OK, OUT_OF_MOVES, OUT_OF_TIME, REVERT_REQUEST };
 
 #include "game/player.h"
-#include "game/board.h"
+#include "game/chess-board.h"
 
 #include <utility>
 #include <vector>
@@ -36,6 +36,6 @@ private:
 	bool m_storeMoves;
 
 	void nextPlayer();
-	void playMove(const Move& move, bool verbose);
+	void playMove(const BoardMove& move, bool verbose);
 	void revert();
 };

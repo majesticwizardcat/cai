@@ -3,9 +3,9 @@
 #include <iostream>
 #include <algorithm>
 
-MoveResult HumanPlayer::getMove(const ChessBoard& board, Move* move) {
-	MovesStackVector moves;
-	board.getMoves(m_color, &moves);
+MoveResult HumanPlayer::getMove(const ChessBoard& board, BoardMove* move) {
+	MovesVector moves;
+	board.getMoves(m_color, moves);
 	if (moves.empty()) {
 		return MoveResult::OUT_OF_MOVES;
 	}
@@ -13,7 +13,7 @@ MoveResult HumanPlayer::getMove(const ChessBoard& board, Move* move) {
 	board.printBoard();
 	for (int i = 0; i < moves.size(); ++i) {
 		std::cout << i << ". ";
-		moves[i].printMove();
+		board.printMoveOnBoard(moves[i]);
 		std::cout << '\n';
 	}
 

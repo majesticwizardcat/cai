@@ -5,9 +5,9 @@
 #include <tuple>
 #include <vector>
 
-MoveResult AIPlayer::getMove(const ChessBoard& board, Move* outMove) {
-	MovesStackVector moves;
-	board.getMoves(m_color, &moves);
+MoveResult AIPlayer::getMove(const ChessBoard& board, BoardMove* outMove) {
+	MovesVector moves;
+	board.getMoves(m_color, moves);
 	if (moves.empty()) {
 		return MoveResult::OUT_OF_MOVES;
 	}
@@ -20,13 +20,13 @@ MoveResult AIPlayer::getMove(const ChessBoard& board, Move* outMove) {
 	std::vector<Position> nextPositions;
 	nextPositions.reserve(moves.size());
 	for (const auto& m : moves) {
-		Board next(board);
+		ChessBoard next(board);
 		next.playMove(m);
 		NNPPStackVector<float> values = next.asFloats();
 		nextPositions.emplace_back(&m, 0.0f, std::move(values));
 		Position* pos = &nextPositions.back();
 		analyze(pos, 0);
-		pos->evaluation *= m_rgen.get(0.95f, 1.0f); // Reduce to create some random moves more possible, encapsulates the "feeling" of the ai
+		pos->evaluation *= m_rgen.get(0.975f, 1.0f); // Reduce to create some random moves more possible, encapsulates the "feeling" of the ai
 	}
 
 	uint cyclesPerPosition = std::max(1u, m_cyclesPerMove / static_cast<uint>(nextPositions.size()));
@@ -38,6 +38,6 @@ MoveResult AIPlayer::getMove(const ChessBoard& board, Move* outMove) {
 		assert(!std::isnan(worst->evaluation));
 		nextPositions.erase(worst);
 	}
-	*outMove = Move(*nextPositions.back().move);
+	*outMove = BoardMove(*nextPositions.back().move);
 	return MoveResult::MOVE_OK;
 }
