@@ -4,4 +4,4 @@ add_library(Game
 	chess-board.cpp
 )
 
-target_link_libraries(Game AI)
+target_link_libraries(Game NNAI)

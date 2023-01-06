@@ -2,8 +2,8 @@
 
 class AITrainer;
 
-#include "ai/cai-population.h"
-#include "ai/ai-player.h"
+#include "neural-net-ai/cai-population.h"
+#include "neural-net-ai/nnai-player.h"
 #include "game/game.h"
 
 #include <nnpp.hpp>
@@ -44,11 +44,11 @@ public:
 	}
 };
 
-class AITrainer : public NNPPTrainer<float> {
+class NNAITrainer : public NNPPTrainer<float> {
 public:
-	AITrainer() = delete;
-	AITrainer(const AITrainer& other) = delete;
-	AITrainer(uint sessions, uint threads, CAIPopulation* const population) 
+	NNAITrainer() = delete;
+	NNAITrainer(const AITrainer& other) = delete;
+	NNAITrainer(uint sessions, uint threads, CAIPopulation* const population) 
 		: NNPPTrainer<float>(sessions, threads, population)
 		, m_indexDist(0, m_trainee->getPopulationSize() - 1)
 		, m_realDist(0.0f, 1.0f) { }
@@ -99,6 +99,6 @@ private:
 		return std::min(CYCLES_PER_HOUR, CYCLES_PER_SECOND + static_cast<uint>(m_realDist(m_randomDevice) * m_trainee->getGenerartion() * CYCLES_PER_GEN));
 	}
 
-	GameResult runGame(const AI* white, const AI* black, uint cycles);
+	GameResult runGame(const NNAI* white, const NNAI* black, uint cycles);
 	uint findAndStorePlayerIndex();
 };

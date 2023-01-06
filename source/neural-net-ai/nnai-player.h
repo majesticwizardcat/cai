@@ -1,21 +1,21 @@
 #pragma once
 
-class AIPlayer;
+class NNAIPlayer;
 
 #include "game/player.h"
 #include "tools/random-generator.h"
-#include "ai/cai-population.h"
+#include "neural-net-ai/cai-population.h"
 
 #include <nnpp.hpp>
 
-typedef NNAi<float> AI;
+typedef NNAi<float> NNAI;
 
 const float REDUCTION = 1000.0f;
 
-class AIPlayer : public Player {
+class NNAIPlayer : public Player {
 public:
-	AIPlayer() = delete;
-	AIPlayer(Color color, const AI* ai, uint cyclesPerMove)
+	NNAIPlayer() = delete;
+	NNAIPlayer(Color color, const NNAI* ai, uint cyclesPerMove)
 		: Player(color)
 		, m_ai(ai)
 		, m_cyclesPerMove(cyclesPerMove) { }
@@ -52,7 +52,7 @@ private:
 		}
 	};
 
-	const AI* m_ai;
+	const NNAI* m_ai;
 	uint m_cyclesPerMove;
 	RandomGenerator m_rgen;
 

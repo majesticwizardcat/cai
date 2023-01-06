@@ -1,11 +1,11 @@
-#include "ai/ai-player.h"
+#include "neural-net-ai/nnai-player.h"
 
 #include <iostream>
 #include <algorithm>
 #include <tuple>
 #include <vector>
 
-MoveResult AIPlayer::getMove(const ChessBoard& board, BoardMove* outMove) {
+MoveResult NNAIPlayer::getMove(const ChessBoard& board, BoardMove* outMove) {
 	MovesVector moves;
 	board.getMoves(m_color, moves);
 	if (moves.empty()) {

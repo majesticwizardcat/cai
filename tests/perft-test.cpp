@@ -60,6 +60,7 @@ const std::vector<PerftTest> TESTS = {
 	PerftTest("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 4, 197281),
 	PerftTest("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 5, 4865609),
 	PerftTest("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 6, 119060324),
+	PerftTest("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 7, 3195901860),
 
 	PerftTest("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10", 1, 46),
 	PerftTest("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10", 2, 2079),
@@ -78,6 +79,7 @@ const std::vector<PerftTest> TESTS = {
 	PerftTest("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", 3, 97862),
 	PerftTest("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", 4, 4085603),
 	PerftTest("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", 5, 193690690),
+	PerftTest("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", 6, 8031647685),
 
 	PerftTest("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ", 1, 14),
 	PerftTest("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ", 2, 191),
@@ -85,6 +87,7 @@ const std::vector<PerftTest> TESTS = {
 	PerftTest("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ", 4, 43238),
 	PerftTest("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ", 5, 674624),
 	PerftTest("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ", 6, 11030083),
+	PerftTest("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ", 7, 178633661),
 
 	PerftTest("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", 1, 6),
 	PerftTest("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", 2, 264),

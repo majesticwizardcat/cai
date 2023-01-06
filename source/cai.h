@@ -1,9 +1,9 @@
 #pragma once
 
 #include "game/game.h"
-#include "ai/ai-trainer.h"
-#include "ai/ai-player.h"
-#include "ai/cai-population.h"
+#include "neural-net-ai/nnai-trainer.h"
+#include "neural-net-ai/nnai-player.h"
+#include "neural-net-ai/cai-population.h"
 #include "tools/util.h"
 #include "tools/testing.h"
 

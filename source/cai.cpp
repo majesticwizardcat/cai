@@ -94,7 +94,7 @@ void Cai::trainPopulation(int sessions, int times) {
 		return;
 	}
 	times = std::max(1, times);
-	AITrainer trainer(sessions, m_threads, m_population.get());
+	NNAITrainer trainer(sessions, m_threads, m_population.get());
 	for (int i = 0; i < times; ++i) {
 		trainer.run(true);
 		std::cout << "Full sessions of " << sessions << " completed: " << (i + 1) << "  out of: " << times << '\n';
@@ -115,7 +115,7 @@ void Cai::playGameVSAI(Color playerColor) {
 	ChessBoard b;
 	Color aiColor = playerColor == Color::WHITE ? Color::BLACK : Color::WHITE;
 	HumanPlayer human(playerColor);
-	AIPlayer aip(aiColor, &m_population->getBestNNAiConstRef(), AI_TIME);
+	NNAIPlayer aip(aiColor, &m_population->getBestNNAiConstRef(), AI_TIME);
 	Player* white;
 	Player* black;
 	if (playerColor == Color::WHITE) {

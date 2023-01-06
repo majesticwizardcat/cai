@@ -1,11 +1,11 @@
-#include "ai/ai-player.h"
-#include "ai/cai-population.h"
-#include "ai/ai-trainer.h"
+#include "neural-net-ai/nnai-player.h"
+#include "neural-net-ai/cai-population.h"
+#include "neural-net-ai/nnai-trainer.h"
 
 int main() {
-	AI ai(0, CAI_LAYERS);
+	NNAI ai(0, CAI_LAYERS);
 	ai.initRandomUniform(-1.0f, 1.0f);
-	AIPlayer aiPlayer(Color::WHITE, &ai, 120);
+	NNAIPlayer aiPlayer(Color::WHITE, &ai, 120);
 	ChessBoard board;
 	BoardMove m;
 
@@ -26,7 +26,7 @@ int main() {
 
 	{
 		std::unique_ptr<CAIPopulation> pop = createCAIPopulation("ai-test.cai", 150);
-		AITrainer trainer(13, 4, pop.get());
+		NNAITrainer trainer(13, 4, pop.get());
 		trainer.run(true);
 		pop->printInfo();
 		std::cout << "Worst score: " << pop->getMinScoreNNAi().getScore() << '\n';

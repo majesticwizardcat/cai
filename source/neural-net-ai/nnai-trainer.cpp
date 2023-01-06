@@ -1,5 +1,5 @@
-#include "ai/ai-trainer.h"
-#include "ai/ai-player.h"
+#include "neural-net-ai/nnai-trainer.h"
+#include "neural-net-ai/nnai-player.h"
 #include "tools/random-generator.h"
 
 #include <thread>
@@ -8,7 +8,7 @@
 #include <atomic>
 #include <functional>
 
-uint AITrainer::findAndStorePlayerIndex() {
+uint NNAITrainer::findAndStorePlayerIndex() {
 	std::lock_guard<std::mutex> lock(m_occupiedSetLock);
 	uint index = m_indexDist(m_randomDevice);
 
@@ -21,7 +21,7 @@ uint AITrainer::findAndStorePlayerIndex() {
 	return index;
 }
 
-std::vector<NNPPTrainingUpdate<float>> AITrainer::runSession() {
+std::vector<NNPPTrainingUpdate<float>> NNAITrainer::runSession() {
 	std::vector<NNPPTrainingUpdate<float>> scoreUpdates;
 	uint whitePlayerIndex = findAndStorePlayerIndex();
 	uint blackPlayerIndex = findAndStorePlayerIndex();
@@ -32,8 +32,8 @@ std::vector<NNPPTrainingUpdate<float>> AITrainer::runSession() {
 		cycles = cyclesToUse();
 	}
 
-	AI* white = m_trainee->getNNAiPtrAt(whitePlayerIndex);
-	AI* black = m_trainee->getNNAiPtrAt(blackPlayerIndex);
+	NNAI* white = m_trainee->getNNAiPtrAt(whitePlayerIndex);
+	NNAI* black = m_trainee->getNNAiPtrAt(blackPlayerIndex);
 
 	GameResult result = runGame(white, black, cycles);
 	const float gamePoints = cycles * POINTS_PER_CYCLE;
@@ -75,7 +75,7 @@ std::vector<NNPPTrainingUpdate<float>> AITrainer::runSession() {
 	return scoreUpdates;
 }
 
-uint AITrainer::sessionsTillEvolution() const {
+uint NNAITrainer::sessionsTillEvolution() const {
 	uint sessionsTillEvol = calculateSessionsToEvol();
 	if (m_trainee->getSessionsTrainedThisGen() > sessionsTillEvol) {
 		return 0;
@@ -83,10 +83,10 @@ uint AITrainer::sessionsTillEvolution() const {
 	return sessionsTillEvol - m_trainee->getSessionsTrainedThisGen();
 }
 
-GameResult AITrainer::runGame(const AI* white, const AI* black, uint cycles) {
+GameResult NNAITrainer::runGame(const NNAI* white, const NNAI* black, uint cycles) {
 	ChessBoard b;
-	AIPlayer whitePlayer(Color::WHITE, white, cycles);
-	AIPlayer blackPlayer(Color::BLACK, black, cycles);
+	NNAIPlayer whitePlayer(Color::WHITE, white, cycles);
+	NNAIPlayer blackPlayer(Color::BLACK, black, cycles);
 	Game g(b, &whitePlayer, &blackPlayer, MAX_MOVES, false);
 	return g.start(false);
 }
