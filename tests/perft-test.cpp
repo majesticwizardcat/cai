@@ -169,5 +169,5 @@ int main () {
 		std::cout << "All tests passed! Great success!" << '\n';
 	}
 	std::cout << "Time: " << duration.count() << '\n';
-	std::cout << "Number of heap allocations: " << allocationsBeforeTests - allocationsAfterTests << '\n';
+	std::cout << "Number of heap allocations: " << allocationsAfterTests - allocationsBeforeTests << '\n';
 }
