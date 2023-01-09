@@ -2,164 +2,16 @@
 
 class ChessBoard;
 
+#include "game/chess-board-structs.hpp"
+
 #include <string>
-#include <nnpp.hpp>
 
-typedef unsigned char uint8_t;
-typedef unsigned int uint32_t;
-typedef unsigned long long uint64_t;
-
-static const uint8_t SIZE = 8;
 static const uint8_t PAIRS_PER_ROW = 4;
 static const uint8_t BITS_PER_TILE = 4;
-static const int8_t INVALID = -1;
 static const int8_t KING_LONG_CASTLE_X = 2;
 static const int8_t KING_SHORT_CASTLE_X = 6;
 static const int8_t ROOK_LONG_CASTLE_X = 3;
 static const int8_t ROOK_SHORT_CASTLE_X = 5;
-
-struct TileCoords {
-	int8_t x : 4;
-	int8_t y : 4;
-
-	TileCoords(int8_t x, int8_t y)
-			: x(x)
-			, y(y) {
-		assert(x < SIZE);
-		assert(y < SIZE);
-	}
-
-	TileCoords() : TileCoords(INVALID, INVALID) { }
-
-	inline bool operator==(const TileCoords& other) const {
-		return x == other.x && y == other.y;
-	}
-
-	inline bool areValid() const {
-		assert((x != INVALID && y != INVALID) || (x == INVALID && y == INVALID));
-		return x != INVALID;
-	}
-};
-static_assert(sizeof(TileCoords) == 1);
-
-enum Color : uint8_t {
-	WHITE,
-	BLACK,
-	NUM_OF_COLORS,
-};
-
-enum TileType : uint8_t {
-	EMPTY,
-	PAWN,
-	KNIGHT,
-	BISHOP,
-	ROOK,
-	QUEEN,
-	KING,
-	NUM_OF_TYPES,
-};
-
-struct BoardTilePair {
-	Color color0 : 1;
-	TileType type0 : 3;
-	Color color1 : 1;
-	TileType type1 : 3;
-};
-static_assert(sizeof(BoardTilePair) == sizeof(uint8_t));
-
-struct BoardTile {
-	Color color : 1;
-	TileType type : 3;
-
-	BoardTile() : BoardTile(WHITE, EMPTY) { }
-
-	BoardTile(Color color, TileType type)
-			: color(color)
-			, type(type) { }
-
-	BoardTile(uint8_t fromUint8) {
-		constexpr uint8_t colorMask = 0b1;
-		constexpr uint8_t typeMask = 0b111;
-		color = static_cast<Color>(fromUint8 & colorMask);
-		type = static_cast<TileType>((fromUint8 >> 1) & typeMask);
-	}
-
-	inline operator uint8_t() const {
-		return color | (type << 1);
-	}
-
-	inline operator char() const {
-		switch(type) {
-		case TileType::PAWN:
-			return color == Color::WHITE ? 'P' : 'p';
-		case TileType::KNIGHT:
-			return color == Color::WHITE ? 'N' : 'n';
-		case TileType::BISHOP:
-			return color == Color::WHITE ? 'B' : 'b';
-		case TileType::ROOK:
-			return color == Color::WHITE ? 'R' : 'r';
-		case TileType::QUEEN:
-			return color == Color::WHITE ? 'Q' : 'q';
-		case TileType::KING:
-			return color == Color::WHITE ? 'K' : 'k';
-		default:
-			return ' ';
-		};
-		return ' ';
-	}
-
-	inline float asFloat() const {
-		float color = color == WHITE ? 1.0f : -1.0f;
-		float start = 0.0f;
-		switch(type) {
-		case PAWN:
-			return 1.0f * color;
-		case KNIGHT:
-			return 3.0f * color;
-		case BISHOP:
-			return 3.5f * color;
-		case ROOK:
-			return 5.0f * color;
-		case QUEEN:
-			return 9.0f * color;
-		case KING:
-			return 10.0f * color;
-		default:
-			return 0.0f;
-		};
-		return 0.0f;
-	}
-};
-
-struct BoardMove {
-	// The rook coords are not needed and will be removed, reducing the BoardMove to a size of 4 bytes;
-	TileCoords from;
-	TileCoords to;
-	TileCoords enPassantPawn;
-	TileType promotionType;
-
-	BoardMove()
-			: promotionType(EMPTY) { }
-
-	BoardMove(uint8_t fromX, uint8_t fromY, uint8_t toX, uint8_t toY)
-			: promotionType(EMPTY)
-			, from(fromX, fromY)
-			, to(toX, toY) { }
-	
-	BoardMove(const TileCoords& from, const TileCoords& to)
-			: promotionType(EMPTY)
-			, from(from)
-			, to(to) { }
-	
-	inline bool isCastle(TileType type) const { 
-		assert(from.areValid() && to.areValid());
-		return type == KING && std::abs(from.x - to.x) == 2;
-	}
-};
-static_assert(sizeof(BoardMove) == 4);
-
-typedef StackVector<BoardMove, 256> MovesVector;
-
 class ChessBoard {
 public:
 	ChessBoard();
@@ -205,7 +57,6 @@ private:
 		uint64_t m_tileData[4];
 		BoardTilePair m_boardTiles[32]; // 8 rows of 4 pairs each
 	};
-	static_assert(sizeof(m_tileData) == sizeof(m_boardTiles));
 
 	// 1 bit for next player, 4 bits for castles, 3 bits for enPassantSquareRow, 3 bits for enPassantSquareCol
 	union {
@@ -220,16 +71,15 @@ private:
 			uint32_t pad : 16;
 		} m_positionInfo;
 	};
-	static_assert(sizeof(m_positionInfo) == sizeof(uint32_t));
 
 // Inline Helper functions
 	inline uint8_t index(int8_t x, int8_t y) const {
-		assert(x < SIZE && y < SIZE);
+		assert(x < BOARD_SIZE && y < BOARD_SIZE);
 		return y * PAIRS_PER_ROW + (x >> 1);
 	}
 
 	inline bool areCoordsInBoard(const TileCoords& coords) const {
-		return coords.x >= 0 && coords.x < SIZE && coords.y >= 0 && coords.y < SIZE;
+		return coords.x >= 0 && coords.x < BOARD_SIZE && coords.y >= 0 && coords.y < BOARD_SIZE;
 	}
 
 	inline BoardTile getTile(uint8_t x, uint8_t y) const {

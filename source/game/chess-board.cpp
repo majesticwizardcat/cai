@@ -12,12 +12,12 @@ ChessBoard::ChessBoard()
 	m_positionInfo.canWhiteLongCastle = true;
 	m_positionInfo.nextPlayerColor = WHITE;
 
-	for (uint8_t i = 0; i < SIZE; ++i) {
+	for (uint8_t i = 0; i < BOARD_SIZE; ++i) {
 		setTile(i, 1, BoardTile(WHITE, PAWN));
 		setTile(i, 6, BoardTile(BLACK, PAWN));
 	}
 
-	for (uint8_t i = 0; i < SIZE; ++i) {
+	for (uint8_t i = 0; i < BOARD_SIZE; ++i) {
 		if (i == 0 || i == 7) {
 			setTile(i, 0, BoardTile(WHITE, ROOK));
 			setTile(i, 7, BoardTile(BLACK, ROOK));
@@ -78,12 +78,12 @@ ChessBoard::ChessBoard(const std::string& fen)
 	};
 
 	uint32_t fenIndex = 0;
-	for (uint32_t y = 0; y < SIZE; ++y) {
-		for (uint32_t x = 0; x < SIZE; ++x) {
+	for (uint32_t y = 0; y < BOARD_SIZE; ++y) {
+		for (uint32_t x = 0; x < BOARD_SIZE; ++x) {
 			char next = fen[fenIndex++];
 			if (next >= '0' && next <= '9') {
 				x += next - '0' - 1;
-				assert(x <= SIZE);
+				assert(x <= BOARD_SIZE);
 			}
 			else {
 				BoardTile tile = charToTile(next);
@@ -128,16 +128,16 @@ ChessBoard::ChessBoard(const std::string& fen)
 
 void ChessBoard::printBoard() const {
 	std::cout << "  ";
-	for (uint32_t i = 0; i < SIZE * 4 + 1; ++i) {
+	for (uint32_t i = 0; i < BOARD_SIZE * 4 + 1; ++i) {
 		std::cout << '*';
 	}
 
 	std::cout << '\n';
-	for (uint8_t y = SIZE - 1; y < SIZE; --y) {
+	for (uint8_t y = BOARD_SIZE - 1; y < BOARD_SIZE; --y) {
 		std::cout << (y + 1) << " * ";
-		for (uint8_t x = 0; x < SIZE; ++x) {
+		for (uint8_t x = 0; x < BOARD_SIZE; ++x) {
 			std::cout << static_cast<char>(getTile(x, y));
-			if (x < SIZE - 1) {
+			if (x < BOARD_SIZE - 1) {
 				std::cout << " | ";
 			}
 		}
@@ -145,12 +145,12 @@ void ChessBoard::printBoard() const {
 	}
 
 	std::cout << "  ";
-	for (int i = 0; i < SIZE * 4 + 1; ++i) {
+	for (int i = 0; i < BOARD_SIZE * 4 + 1; ++i) {
 		std::cout << '*';
 	}
 	std::cout << '\n' << "   ";
 
-	for (int i = 0; i < SIZE; ++i) {
+	for (int i = 0; i < BOARD_SIZE; ++i) {
 		std::cout << ' ' << static_cast<char>('a' + i) << "  ";
 	}
 	std::cout << ' ' << std::endl;
@@ -190,8 +190,8 @@ void ChessBoard::printMoveOnBoard(const BoardMove& move) const {
 }
 
 void ChessBoard::getMoves(Color color, MovesVector& outMoves) const {
-	for (uint8_t x = 0; x < SIZE; ++x) {
-		for (uint8_t y = 0; y < SIZE; ++y) {
+	for (uint8_t x = 0; x < BOARD_SIZE; ++x) {
+		for (uint8_t y = 0; y < BOARD_SIZE; ++y) {
 			const BoardTile tile = getTile(x, y);
 			if (tile.type != EMPTY && tile.color == color) {
 				getMovesForPiece(tile, x, y, outMoves);
@@ -332,11 +332,11 @@ bool ChessBoard::isKingInCheck(Color color) const {
 
 	int8_t dir = color == Color::WHITE ? 1 : -1;
 	int8_t pawnY = kingTile.y + dir;
-	if (pawnY >= 0 && pawnY < SIZE) {
+	if (pawnY >= 0 && pawnY < BOARD_SIZE) {
 		TileCoords pawnCoords(INVALID, pawnY);
 		for (int8_t i = -1; i <= 1; ++i) {
 			pawnCoords.x = kingTile.x + i;
-			if (i == 0 || pawnCoords.x < 0 || pawnCoords.x >= SIZE) {
+			if (i == 0 || pawnCoords.x < 0 || pawnCoords.x >= BOARD_SIZE) {
 				continue;
 			}
 
@@ -386,8 +386,8 @@ bool ChessBoard::isMoveValid(const BoardMove& move) const {
 }
 
 bool ChessBoard::isDraw() const {
-	for (uint8_t x = 0; x < SIZE; ++x) {
-		for (uint8_t y = 0; y < SIZE; ++y) {
+	for (uint8_t x = 0; x < BOARD_SIZE; ++x) {
+		for (uint8_t y = 0; y < BOARD_SIZE; ++y) {
 			const BoardTile tile = getTile(x, y);
 			if (tile.type != EMPTY && tile.type != KING) {
 				return false;
@@ -398,8 +398,8 @@ bool ChessBoard::isDraw() const {
 }
 
 TileCoords ChessBoard::findKing(Color color) const {
-	for (uint8_t x = 0; x < SIZE; ++x) {
-		for (uint8_t y = 0; y < SIZE; ++y) {
+	for (uint8_t x = 0; x < BOARD_SIZE; ++x) {
+		for (uint8_t y = 0; y < BOARD_SIZE; ++y) {
 			const BoardTile tile = getTile(x, y);
 			if (tile.type == KING && tile.color == color) {
 				return TileCoords(x, y);
@@ -425,7 +425,7 @@ void ChessBoard::getMovesForPiece(BoardTile tile, uint8_t x, uint8_t y, MovesVec
 void ChessBoard::getDirectionalMoves(Color color, int8_t sx, int8_t sy, int8_t dx, int8_t dy, MovesVector& outMoves) const {
 	BoardMove move(sx, sy, sx, sy);
 
-	for(uint8_t i = 0; i < SIZE; ++i) { // using a for loop here only for the compiler
+	for(uint8_t i = 0; i < BOARD_SIZE; ++i) { // using a for loop here only for the compiler
 		move.to.x += dx;
 		move.to.y += dy;
 		if (!areCoordsInBoard(move.to)) {
@@ -546,7 +546,7 @@ void ChessBoard::getPawnMoves(Color color, int8_t sx, int8_t sy, MovesVector& ou
 	assert(areCoordsInBoard(move.to)); // Pawn should always be on board on the y axis otehrwise there has been an error
 	for (int8_t i = -1; i <= 1; ++i) {
 		move.to.x = sx + i;
-		if (move.to.x < 0 || move.to.x >= SIZE) { // this can be improved a bit here using max and setting the for loop limits
+		if (move.to.x < 0 || move.to.x >= BOARD_SIZE) { // this can be improved a bit here using max and setting the for loop limits
 			continue;
 		}
 
@@ -572,7 +572,7 @@ void ChessBoard::getPawnMoves(Color color, int8_t sx, int8_t sy, MovesVector& ou
 		move.enPassantPawn.y = sy;
 		for (int8_t i = -1; i <= 1; ++i) {
 			move.to.x = sx + i;
-			if (i == 0 || move.to.x < 0 || move.to.x >= SIZE) {
+			if (i == 0 || move.to.x < 0 || move.to.x >= BOARD_SIZE) {
 				continue;
 			}
 			const BoardTile enPasToTile = getTile(move.to);
