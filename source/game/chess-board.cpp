@@ -3,8 +3,7 @@
 #include <iostream>
 
 ChessBoard::ChessBoard()
-		: m_movesPlayed(0)
-		, m_positionData(0) {
+		: m_positionData(0) {
 	memset(m_tileData, 0, sizeof(m_tileData));
 	m_positionInfo.enPassantSquare = TileCoords(INVALID, INVALID);
 	m_positionInfo.canBlackShortCastle = true;
@@ -43,8 +42,7 @@ ChessBoard::ChessBoard()
 }
 
 ChessBoard::ChessBoard(const std::string& fen)
-		: m_movesPlayed(0)
-		, m_positionData(0) {
+		: m_positionData(0) {
 	memset(m_tileData, 0, sizeof(m_tileData));
 	m_positionInfo.enPassantSquare = TileCoords(INVALID, INVALID);
 	m_positionInfo.canBlackShortCastle = false;
@@ -292,7 +290,6 @@ void ChessBoard::playMove(const BoardMove& move) {
 	setTile(move.to, from);
 
 	m_positionInfo.nextPlayerColor = m_positionInfo.nextPlayerColor == WHITE ? BLACK : WHITE;
-	m_movesPlayed++;
 }
 
 bool ChessBoard::isKingInCheck(Color color) const {

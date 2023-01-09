@@ -173,10 +173,6 @@ public:
 			&& m_positionData == other.m_positionData;
 	}
 
-	inline uint32_t getMovesPlayed() const {
-		return m_movesPlayed;
-	}
-
 	inline Color getNextPlayerColor() const {
 		return m_positionInfo.nextPlayerColor;
 	}
@@ -204,8 +200,6 @@ public:
 	bool isDraw() const;
 
 private:
-	uint32_t m_movesPlayed;
-
 	// 4 bits for each tile: 1 bit for color, 3 bits for type
 	union {
 		uint64_t m_tileData[4];

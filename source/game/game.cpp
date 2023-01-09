@@ -5,7 +5,7 @@
 GameResult Game::start(bool verbose) {
 	BoardMove m;
 
-	while (m_maxMoves <= 0 || m_board.getMovesPlayed() < m_maxMoves) {
+	while (m_maxMoves <= 0 || m_boardStates.size() < m_maxMoves) {
 		if (m_board.isDraw()) {
 			return GameResult::DRAW;
 		}
