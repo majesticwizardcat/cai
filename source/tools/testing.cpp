@@ -1,22 +1,32 @@
 #include "tools/testing.h"
 #include "game/chess-board.h"
 
+#include <unordered_map>
+
 namespace testing {
 
-unsigned long long perft(const std::string& fen, unsigned int startingDepth, bool verbose) {
-	std::function<unsigned long long(const ChessBoard&, int)> findPositions = [&](const ChessBoard& b, int depth) {
+unsigned long long perft(const std::string& fen, uint64_t startingDepth, bool verbose) {
+	typedef std::unordered_map<ChessBoard, uint64_t, BoardHasher> MemoMap;
+	std::vector<MemoMap> memos(startingDepth + 1);
+	std::function<uint64_t(const ChessBoard&, uint64_t)> findPositions = [&](const ChessBoard& b, uint64_t depth) {
+		auto it = memos[depth].find(b);
+		if (it != memos[depth].end()) {
+			return it->second;
+		}
+
 		MovesVector moves;
 		b.getNextPlayerMoves(moves);
 		if (depth == 1) {
-			return static_cast<unsigned long long>(moves.size());
+			return moves.size();
 		}
 
-		unsigned long long positions = 0;
+		uint64_t positions = 0;
 		for (const auto& m : moves) {
 			ChessBoard nextPosition(b);
 			nextPosition.playMove(m);
 			positions += findPositions(nextPosition, depth - 1);
 		}
+		memos[depth][b] = positions;
 		return positions;
 	};
 
@@ -38,7 +48,7 @@ unsigned long long perft(const std::string& fen, unsigned int startingDepth, boo
 	return positionsFound;
 }
 
-unsigned long long perft(unsigned int depth) {
+unsigned long long perft(uint64_t depth) {
 	return perft(DEFAULT_POSITION, depth, true);
 }
 
