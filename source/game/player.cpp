@@ -14,7 +14,6 @@ MoveResult HumanPlayer::getMove(const ChessBoard& board, BoardMove* move) {
 	for (int i = 0; i < moves.size(); ++i) {
 		std::cout << i << ". ";
 		board.printMoveOnBoard(moves[i]);
-		std::cout << '\n';
 	}
 
 	std::cout << "Choose move: ";

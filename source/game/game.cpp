@@ -42,18 +42,17 @@ void Game::nextPlayer() {
 }
 
 void Game::playMove(const BoardMove& move, bool verbose) {
+	if (verbose) {
+		std::cout << "Played: ";
+		m_board.printMoveOnBoard(move);
+		std::cout << '\n';
+	}
 	if (m_storeMoves) {
 		m_boardStates.push_back(m_board);
 	}
 	m_board.playMove(move);
 
 	nextPlayer();
-
-	if (verbose) {
-		std::cout << "Played: ";
-		m_board.printMoveOnBoard(move);
-		std::cout << '\n';
-	}
 }
 
 void Game::revert() {

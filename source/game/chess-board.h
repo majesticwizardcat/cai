@@ -12,6 +12,7 @@ static const int8_t KING_LONG_CASTLE_X = 2;
 static const int8_t KING_SHORT_CASTLE_X = 6;
 static const int8_t ROOK_LONG_CASTLE_X = 3;
 static const int8_t ROOK_SHORT_CASTLE_X = 5;
+
 class ChessBoard {
 public:
 	ChessBoard();
@@ -23,6 +24,10 @@ public:
 			&& m_tileData[2] == other.m_tileData[2]
 			&& m_tileData[3] == other.m_tileData[3]
 			&& m_positionData == other.m_positionData;
+	}
+
+	inline size_t getHash() const {
+		return (m_tileData[0] ^ m_tileData[1] ^ m_tileData[2] ^ m_tileData[3]) + m_positionData;
 	}
 
 	inline Color getNextPlayerColor() const {
@@ -43,6 +48,12 @@ public:
 		return res;
 	}
 
+	inline BoardTile getTile(uint8_t x, uint8_t y) const {
+		const bool isFirstPair = (x & 0b1) == 0;
+		const BoardTilePair& pair = m_boardTiles[index(x, y)];
+		return isFirstPair ? BoardTile(pair.color0, pair.type0) : BoardTile(pair.color1, pair.type1);
+	}
+
 	void printBoard() const;
 	void printMoveOnBoard(const BoardMove& move) const;
 	void getMoves(Color color, MovesVector& outMoves) const;
@@ -58,9 +69,9 @@ private:
 		BoardTilePair m_boardTiles[32]; // 8 rows of 4 pairs each
 	};
 
-	// 1 bit for next player, 4 bits for castles, 3 bits for enPassantSquareRow, 3 bits for enPassantSquareCol
+	// 1 bit for next player, 4 bits for castles, 8 bits for en passant square
 	union {
-		uint32_t m_positionData;
+		uint16_t m_positionData;
 		struct {
 			Color nextPlayerColor : 1;
 			bool canWhiteLongCastle : 1;
@@ -68,7 +79,6 @@ private:
 			bool canWhiteShortCastle : 1;
 			bool canBlackShortCastle : 1;
 			TileCoords enPassantSquare;
-			uint32_t pad : 16;
 		} m_positionInfo;
 	};
 
@@ -76,16 +86,6 @@ private:
 	inline uint8_t index(int8_t x, int8_t y) const {
 		assert(x < BOARD_SIZE && y < BOARD_SIZE);
 		return y * PAIRS_PER_ROW + (x >> 1);
-	}
-
-	inline bool areCoordsInBoard(const TileCoords& coords) const {
-		return coords.x >= 0 && coords.x < BOARD_SIZE && coords.y >= 0 && coords.y < BOARD_SIZE;
-	}
-
-	inline BoardTile getTile(uint8_t x, uint8_t y) const {
-		const bool isFirstPair = (x & 0b1) == 0;
-		const BoardTilePair& pair = m_boardTiles[index(x, y)];
-		return isFirstPair ? BoardTile(pair.color0, pair.type0) : BoardTile(pair.color1, pair.type1);
 	}
 
 	inline BoardTile getTile(const TileCoords& coords) const { 
@@ -130,3 +130,10 @@ private:
 	void getPawnMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const;
 	void getKingMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const;
 };
+
+struct BoardHasher {
+	inline size_t operator()(const ChessBoard& board) const {
+		return board.getHash();
+	}
+};
+	

@@ -17,6 +17,14 @@ public:
 
 	RandomGenerator(unsigned long long seed) : m_randomDevice(seed) { }
 
+	inline int16_t getInt16() {
+		return static_cast<int16_t>(m_randomDevice());
+	}
+
+	inline uint32_t getUint32() {
+		return m_randomDevice();
+	}
+
 	inline float get() {
 		return m_distribution(m_randomDevice);
 	}

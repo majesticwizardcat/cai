@@ -11,18 +11,21 @@
 #include <chrono>
 
 unsigned long long allocs = 0;
+unsigned long long totalAllocatedMem = 0;
 
 void* operator new(std::size_t size) {
 	allocs++;
+	totalAllocatedMem += size;
 	void *p = malloc(size);
-	if(!p) throw std::bad_alloc();
+	if (!p) throw std::bad_alloc();
 	return p;
 }
 
 void* operator new[](std::size_t size) {
 	allocs++;
+	totalAllocatedMem += size;
 	void *p = malloc(size);
-	if(!p) throw std::bad_alloc();
+	if (!p) throw std::bad_alloc();
 	return p;
 }
 
@@ -30,11 +33,11 @@ void* operator new[](std::size_t size, const std::nothrow_t&) throw() {
 	allocs++;
 	return malloc(size);
 }
+
 void* operator new(std::size_t size, const std::nothrow_t&) throw() {
 	allocs++;
 	return malloc(size);
 }
-
 
 void operator delete(void* ptr) throw() { free(ptr); }
 void operator delete(void* ptr, const std::nothrow_t&) throw() { free(ptr); }
@@ -151,6 +154,8 @@ const std::vector<PerftTest> TESTS = {
 };
 
 int main () {
+	std::cout << "Size of board: " << sizeof(ChessBoard) << '\n';
+	std::cout << "Size of Move: " << sizeof(MovesVector) << '\n';
 	bool anyFail = false;
 	std::chrono::time_point start = std::chrono::high_resolution_clock::now();
 	const unsigned long long allocationsBeforeTests = allocs;
@@ -173,4 +178,6 @@ int main () {
 	}
 	std::cout << "Time: " << duration.count() << '\n';
 	std::cout << "Number of heap allocations: " << allocationsAfterTests - allocationsBeforeTests << '\n';
+	std::cout << "Total heap allocations size: " << totalAllocatedMem << " Bytes or "
+		<< static_cast<float>((((totalAllocatedMem / 1024.0f) / 1024.0f) / 1024.0f)) << " GB" << '\n';
 }

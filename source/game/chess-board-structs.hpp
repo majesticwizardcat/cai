@@ -28,7 +28,11 @@ struct TileCoords {
 
 	inline bool areValid() const {
 		assert((x != INVALID && y != INVALID) || (x == INVALID && y == INVALID));
-		return x != INVALID;
+		return x != INVALID; // if one's invalid, both should
+	}
+
+	inline bool areOutsideBoard() const {
+		return x < 0 || y < 0; // board ranges at [0, 7]. Each coords ranges from [-7, 7]
 	}
 };
 
@@ -140,9 +144,10 @@ struct BoardMove {
 			, from(from)
 			, to(to) { }
 	
-	inline bool isCastle(TileType type) const { 
+	inline bool constexpr isCastle(TileType type) const { 
 		assert(from.areValid() && to.areValid());
 		return type == KING && std::abs(from.x - to.x) == 2;
 	}
 };
-typedef StackVector<BoardMove, 256> MovesVector;
+
+typedef StackVector<BoardMove, 255> MovesVector;

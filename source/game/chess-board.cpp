@@ -168,25 +168,25 @@ void ChessBoard::printMoveOnBoard(const BoardMove& move) const {
 		case QUEEN:
 			return 'Q';
 		default:
-			return '\0';
+			return ' ';
 		}
-		return '\0';
+		return ' ';
 	};
 	const BoardTile from = getTile(move.from);
 	const BoardTile to = getTile(move.to);
 
 	if (move.isCastle(from.type)) {
 		if (move.to.x == KING_LONG_CASTLE_X) {
-			std::cout << "O--O";
+			std::cout << "O--O" << '\n';
 		}
 		else {
-			std::cout << "O-O";
+			std::cout << "O-O" << '\n';
 		}
 		return;
 	}
 
-	std::cout << static_cast<char>(from) << 'a' + move.from.x << '1' + move.from.y
-		<< " -> " << 'a' + move.to.x << '1' + move.to.y << printPromotion(move.promotionType);
+	std::cout << static_cast<char>(from) << static_cast<char>('a' + move.from.x) << static_cast<char>('1' + move.from.y)
+		<< " -> " << static_cast<char>('a' + move.to.x) << static_cast<char>('1' + move.to.y) << printPromotion(move.promotionType) << '\n';
 }
 
 void ChessBoard::getMoves(Color color, MovesVector& outMoves) const {
@@ -211,6 +211,8 @@ void ChessBoard::getMoves(Color color, MovesVector& outMoves) const {
 }
 
 void ChessBoard::playMove(const BoardMove& move) {
+	assert(getTile(move.to).type != KING); // There should not be a move played that captures the king
+
 	BoardTile from = getTile(move.from);
 	if (move.promotionType != EMPTY) {
 		from.type = move.promotionType;
@@ -273,23 +275,28 @@ void ChessBoard::playMove(const BoardMove& move) {
 		}
 	}
 	
-	if (move.to.x == 0 && move.to.y == 0) {
-		m_positionInfo.canWhiteLongCastle = false;
+	// If someone captures a corner, remove castle rights
+	if (move.to.x == 0) {
+		if (move.to.y == 0) {
+			m_positionInfo.canWhiteLongCastle = false;
+		}
+		else if (move.to.y == 7) {
+			m_positionInfo.canBlackLongCastle = false;
+		}
 	}
-	else if (move.to.x == 7 && move.to.y == 0) {
-		m_positionInfo.canWhiteShortCastle = false;
-	}
-	else if (move.to.x == 0 && move.to.y == 7) {
-		m_positionInfo.canBlackLongCastle = false;
-	}
-	else if (move.to.x == 7 && move.to.y == 7) {
-		m_positionInfo.canBlackShortCastle = false;
+	else if (move.to.x == 7) {
+		if (move.to.y == 0) {
+			m_positionInfo.canWhiteShortCastle = false;
+		}
+		else if (move.to.y == 7) {
+			m_positionInfo.canBlackShortCastle = false;
+		}
 	}
 
 	removePiece(move.from);
 	setTile(move.to, from);
 
-	m_positionInfo.nextPlayerColor = m_positionInfo.nextPlayerColor == WHITE ? BLACK : WHITE;
+	m_positionInfo.nextPlayerColor = static_cast<Color>(~m_positionInfo.nextPlayerColor);
 }
 
 bool ChessBoard::isKingInCheck(Color color) const {
@@ -351,13 +358,7 @@ bool ChessBoard::isKingInCheck(Color color) const {
 }
 
 bool ChessBoard::isMoveValid(const BoardMove& move) const {
-	ChessBoard movePlayedBoard(*this);
-	movePlayedBoard.playMove(move);
-
 	const BoardTile fromTile = getTile(move.from);
-	if (movePlayedBoard.isKingInCheck(fromTile.color)) {
-		return false;
-	}
 
 	if (move.isCastle(fromTile.type)) {
 		assert(fromTile.type == KING);
@@ -382,7 +383,10 @@ bool ChessBoard::isMoveValid(const BoardMove& move) const {
 			return false;
 		}
 	}
-	return true;
+
+	ChessBoard movePlayedBoard(*this);
+	movePlayedBoard.playMove(move);
+	return !movePlayedBoard.isKingInCheck(fromTile.color);
 }
 
 bool ChessBoard::isDraw() const {
@@ -428,7 +432,7 @@ void ChessBoard::getDirectionalMoves(Color color, int8_t sx, int8_t sy, int8_t d
 	for(uint8_t i = 0; i < BOARD_SIZE; ++i) { // using a for loop here only for the compiler
 		move.to.x += dx;
 		move.to.y += dy;
-		if (!areCoordsInBoard(move.to)) {
+		if (move.to.areOutsideBoard()) {
 			break;
 		}
 
@@ -449,7 +453,7 @@ void ChessBoard::getSurroundingMoves(Color color, int8_t sx, int8_t sy, MovesVec
 		for (int8_t j = -1; j <= 1; ++j) {
 			move.to.x = sx + i;
 			move.to.y = sy + j;
-			if ((i == 0 && j == 0) || !areCoordsInBoard(move.to)) {
+			if ((i == 0 && j == 0) || move.to.areOutsideBoard()) {
 				continue;
 			}
 
@@ -501,7 +505,7 @@ void ChessBoard::getKnightMoves(Color color, int8_t sx, int8_t sy, MovesVector& 
 
 			move.to.x = sx + 2 * i;
 			move.to.y = sy + j;
-			if (areCoordsInBoard(move.to)) {
+			if (!move.to.areOutsideBoard()) {
 				const BoardTile toTile = getTile(move.to);
 				if (toTile.type == EMPTY || toTile.color != color) {
 					outMoves.push(move);
@@ -510,7 +514,7 @@ void ChessBoard::getKnightMoves(Color color, int8_t sx, int8_t sy, MovesVector& 
 
 			move.to.x = sx + j;
 			move.to.y = sy + i * 2;
-			if (areCoordsInBoard(move.to)) {
+			if (!move.to.areOutsideBoard()) {
 				const BoardTile toTile = getTile(move.to);
 				if (toTile.type == EMPTY || toTile.color != color) {
 					outMoves.push(move);
@@ -543,7 +547,7 @@ void ChessBoard::getPawnMoves(Color color, int8_t sx, int8_t sy, MovesVector& ou
 	};
 
 	move.to.y = sy + dir;
-	assert(areCoordsInBoard(move.to)); // Pawn should always be on board on the y axis otehrwise there has been an error
+	assert(!move.to.areOutsideBoard()); // Pawn should always be on board on the y axis otehrwise there has been an error
 	for (int8_t i = -1; i <= 1; ++i) {
 		move.to.x = sx + i;
 		if (move.to.x < 0 || move.to.x >= BOARD_SIZE) { // this can be improved a bit here using max and setting the for loop limits
@@ -564,7 +568,7 @@ void ChessBoard::getPawnMoves(Color color, int8_t sx, int8_t sy, MovesVector& ou
 	move.to.x = sx;
 	move.to.y = sy + 2 * dir;
 	if (sy == pawStart && getTile(move.to).type == EMPTY && getTile(sx, sy + dir).type == EMPTY) {
-		assert(areCoordsInBoard(move.to)); // If the pawn was at the start then there should be enough space in from
+		assert(!move.to.areOutsideBoard()); // If the pawn was at the start then there should be enough space in from
 		outMoves.push(move);
 	}
 	else if (sy == enPas) {
