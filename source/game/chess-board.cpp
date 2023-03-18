@@ -1,10 +1,12 @@
 #include "game/chess-board.h"
+#include "tools/board-hashing.hpp"
 
 #include <iostream>
 
 ChessBoard::ChessBoard()
-		: m_positionData(0) {
-	memset(m_tileData, 0, sizeof(m_tileData));
+		: m_positionData(0)
+		, m_hash(0) {
+	memset(m_tileData, 0, sizeof(m_boardTiles));
 	m_positionInfo.enPassantSquare = TileCoords(INVALID, INVALID);
 	m_positionInfo.canBlackShortCastle = true;
 	m_positionInfo.canWhiteShortCastle = true;
@@ -39,6 +41,8 @@ ChessBoard::ChessBoard()
 			setTile(i, 7, BoardTile(BLACK, KING));
 		}
 	}
+	
+	calculateHashFromCurrentState();
 }
 
 ChessBoard::ChessBoard(const std::string& fen)
@@ -124,6 +128,8 @@ ChessBoard::ChessBoard(const std::string& fen)
 		m_positionInfo.enPassantSquare = TileCoords(x, y);
 		assert(m_positionInfo.enPassantSquare.areValid());
 	}
+
+	calculateHashFromCurrentState();
 }
 
 void ChessBoard::printBoard() const {
@@ -213,28 +219,88 @@ void ChessBoard::getMoves(Color color, MovesVector& outMoves) const {
 void ChessBoard::playMove(const BoardMove& move) {
 	assert(getTile(move.to).type != KING); // There should not be a move played that captures the king
 
+// Although this does the same, remove piece will perform an extra check when debugging that's useful
+// so we keep it like this, even though it's duplicated (this can be improved later)
+	const auto removeAndUpdateHash = [this](const TileCoords& coords) {
+		m_hash ^= boardhashing::BOARD_HASH_TABLE.getBoardHashValue(getTile(coords), coords);
+		removePiece(coords);
+		m_hash ^= boardhashing::BOARD_HASH_TABLE.getBoardHashValue(BoardTile(0), coords);
+	};
+
+	const auto setAndUpdateHash = [this](const TileCoords& coords, const BoardTile& tile) {
+		m_hash ^= boardhashing::BOARD_HASH_TABLE.getBoardHashValue(getTile(coords), coords);
+		setTile(coords, tile);
+		m_hash ^= boardhashing::BOARD_HASH_TABLE.getBoardHashValue(tile, coords);
+	};
+
+	const auto removeCastleAndUpdateHash = [this](Color color, bool isLongCastle, bool curValue) {
+		if (!curValue) {
+			return;
+		}
+		m_hash ^= boardhashing::BOARD_HASH_TABLE.getCastleHashValue(true, color, isLongCastle);
+		m_hash ^= boardhashing::BOARD_HASH_TABLE.getCastleHashValue(false, color, isLongCastle);
+	};
+
+	const auto removeCastlesCoords = [this, &removeCastleAndUpdateHash](const TileCoords& coords) {
+		if (coords.x == 0) {
+			if (coords.y == 0) {
+				removeCastleAndUpdateHash(WHITE, true, m_positionInfo.canWhiteLongCastle);
+				m_positionInfo.canWhiteLongCastle = false;
+			}
+			else if (coords.y == 7) {
+				removeCastleAndUpdateHash(BLACK, true, m_positionInfo.canBlackLongCastle);
+				m_positionInfo.canBlackLongCastle = false;
+			}
+		}
+		else if (coords.x == 7) {
+			if (coords.y == 0) {
+				removeCastleAndUpdateHash(WHITE, false, m_positionInfo.canWhiteShortCastle);
+				m_positionInfo.canWhiteShortCastle = false;
+			}
+			else if (coords.y == 7) {
+				removeCastleAndUpdateHash(BLACK, false, m_positionInfo.canBlackShortCastle);
+				m_positionInfo.canBlackShortCastle = false;
+			}
+		}
+	};
+
+	const auto updatePlayerColorAndHash = [this]() {
+		m_hash ^= boardhashing::BOARD_HASH_TABLE.getNextPlayerColorHashValue(m_positionInfo.nextPlayerColor);
+		m_positionInfo.nextPlayerColor = static_cast<Color>(~m_positionInfo.nextPlayerColor);
+		m_hash ^= boardhashing::BOARD_HASH_TABLE.getNextPlayerColorHashValue(m_positionInfo.nextPlayerColor);
+	};
+
 	BoardTile from = getTile(move.from);
 	if (move.promotionType != EMPTY) {
 		from.type = move.promotionType;
 	}
 
-	m_positionInfo.enPassantSquare = TileCoords(INVALID, INVALID);
+	if (m_positionInfo.enPassantSquare.areValid())
+	{
+		m_hash ^= boardhashing::BOARD_HASH_TABLE.getEnPassantHashValue(m_positionInfo.enPassantSquare);
+		m_positionInfo.enPassantSquare = TileCoords(INVALID, INVALID);
+	}
 
 	if (move.enPassantPawn.areValid()) {
 		assert(from.type == PAWN && move.enPassantPawn.areValid() && getTile(move.enPassantPawn).type == PAWN);
-		removePiece(move.enPassantPawn);
+		removeAndUpdateHash(move.enPassantPawn);
 	}
 	else if (from.type == PAWN && std::abs(move.from.y - move.to.y) == 2) {
 		m_positionInfo.enPassantSquare = move.to;
+		m_hash ^= boardhashing::BOARD_HASH_TABLE.getEnPassantHashValue(m_positionInfo.enPassantSquare);
 	}
 	else if (from.type == KING) {
 		if (from.color == WHITE) {
-			m_positionInfo.canWhiteShortCastle = false;
+			removeCastleAndUpdateHash(WHITE, true, m_positionInfo.canWhiteLongCastle);
+			removeCastleAndUpdateHash(WHITE, false, m_positionInfo.canWhiteShortCastle);
 			m_positionInfo.canWhiteLongCastle = false;
+			m_positionInfo.canWhiteShortCastle = false;
 		}
 		else {
-			m_positionInfo.canBlackShortCastle = false;
+			removeCastleAndUpdateHash(BLACK, true, m_positionInfo.canBlackLongCastle);
+			removeCastleAndUpdateHash(BLACK, false, m_positionInfo.canBlackShortCastle);
 			m_positionInfo.canBlackLongCastle = false;
+			m_positionInfo.canBlackShortCastle = false;
 		}
 
 		if (move.isCastle(KING)) {
@@ -249,54 +315,42 @@ void ChessBoard::playMove(const BoardMove& move) {
 				rookCoords.x = 7;
 				rookCastleCoords.x = ROOK_SHORT_CASTLE_X;
 			}
-			BoardTile rook = getTile(rookCoords);
-			removePiece(rookCoords);
+			removeAndUpdateHash(rookCoords);
 			assert(getTile(rookCastleCoords).type == EMPTY);
-			setTile(rookCastleCoords, rook);
+			setAndUpdateHash(rookCastleCoords, BoardTile(from.color, ROOK));
 		}
 	}
-	else if (from.type == ROOK) {
-		// We don't care to check if it's the first time or not. If the rook is moved from it's initial column, then we invalidate castling anyway
-		if (move.from.x == 0) {
-			if (move.from.y == 0) {
-				m_positionInfo.canWhiteLongCastle = false;
-			}
-			else if (move.from.y == 7) {
-				m_positionInfo.canBlackLongCastle = false;
-			}
-		}
-		else if (move.from.x == 7) {
-			if (move.from.y == 0) {
-				m_positionInfo.canWhiteShortCastle = false;
-			}
-			else if (move.from.y == 7) {
-				m_positionInfo.canBlackShortCastle = false;
-			}
-		}
+
+	if (from.type == ROOK) {
+		removeCastlesCoords(move.from);
 	}
 	
 	// If someone captures a corner, remove castle rights
-	if (move.to.x == 0) {
-		if (move.to.y == 0) {
-			m_positionInfo.canWhiteLongCastle = false;
-		}
-		else if (move.to.y == 7) {
-			m_positionInfo.canBlackLongCastle = false;
-		}
-	}
-	else if (move.to.x == 7) {
-		if (move.to.y == 0) {
-			m_positionInfo.canWhiteShortCastle = false;
-		}
-		else if (move.to.y == 7) {
-			m_positionInfo.canBlackShortCastle = false;
-		}
+	removeCastlesCoords(move.to);
+
+	removeAndUpdateHash(move.from);
+	setAndUpdateHash(move.to, from);
+	updatePlayerColorAndHash();
+}
+
+void ChessBoard::calculateHashFromCurrentState() {
+	m_hash = 0;
+	m_hash ^= boardhashing::BOARD_HASH_TABLE.getNextPlayerColorHashValue(m_positionInfo.nextPlayerColor);
+	m_hash ^= boardhashing::BOARD_HASH_TABLE.getCastleHashValue(m_positionInfo.canWhiteLongCastle, WHITE, true);
+	m_hash ^= boardhashing::BOARD_HASH_TABLE.getCastleHashValue(m_positionInfo.canWhiteShortCastle, WHITE, false);
+	m_hash ^= boardhashing::BOARD_HASH_TABLE.getCastleHashValue(m_positionInfo.canBlackLongCastle, BLACK, true);
+	m_hash ^= boardhashing::BOARD_HASH_TABLE.getCastleHashValue(m_positionInfo.canBlackShortCastle, BLACK, false);
+
+	if (m_positionInfo.enPassantSquare.areValid()) {
+		m_hash ^= boardhashing::BOARD_HASH_TABLE.getEnPassantHashValue(m_positionInfo.enPassantSquare);
 	}
 
-	removePiece(move.from);
-	setTile(move.to, from);
-
-	m_positionInfo.nextPlayerColor = static_cast<Color>(~m_positionInfo.nextPlayerColor);
+	for (uint8_t x = 0; x < BOARD_SIZE; ++x) {
+		for (uint8_t y = 0; y < BOARD_SIZE; ++y) {
+			TileCoords coords(x, y);
+			m_hash ^= boardhashing::BOARD_HASH_TABLE.getBoardHashValue(getTile(coords), coords);
+		}
+	}
 }
 
 bool ChessBoard::isKingInCheck(Color color) const {
@@ -378,14 +432,14 @@ bool ChessBoard::isMoveValid(const BoardMove& move) const {
 		}
 
 		ChessBoard midPositionPlayed(*this);
-		midPositionPlayed.playMove(inBetween);
+		midPositionPlayed.updateBoardDataFromMove(inBetween);
 		if (midPositionPlayed.isKingInCheck(fromTile.color)) {
 			return false;
 		}
 	}
 
 	ChessBoard movePlayedBoard(*this);
-	movePlayedBoard.playMove(move);
+	movePlayedBoard.updateBoardDataFromMove(move);
 	return !movePlayedBoard.isKingInCheck(fromTile.color);
 }
 
@@ -619,4 +673,39 @@ void ChessBoard::getKingMoves(Color color, int8_t sx, int8_t sy, MovesVector& ou
 		castle.to.x = KING_SHORT_CASTLE_X;
 		outMoves.push(castle);
 	}
+}
+
+void ChessBoard::updateBoardDataFromMove(const BoardMove& move) {
+	assert(getTile(move.to).type != KING); // There should not be a move played that captures the king
+	BoardTile from = getTile(move.from);
+	if (move.promotionType != EMPTY) {
+		from.type = move.promotionType;
+	}
+
+	if (move.enPassantPawn.areValid()) {
+		assert(from.type == PAWN && move.enPassantPawn.areValid() && getTile(move.enPassantPawn).type == PAWN);
+		removePiece(move.enPassantPawn);
+	}
+	else if (from.type == KING) {
+		if (move.isCastle(KING)) {
+			TileCoords rookCoords(INVALID, move.from.y);
+			TileCoords rookCastleCoords(INVALID, move.from.y);
+			if (move.to.x == KING_LONG_CASTLE_X) {
+				rookCoords.x = 0;
+				rookCastleCoords.x = ROOK_LONG_CASTLE_X;
+			}
+			else {
+				assert(move.to.x == KING_SHORT_CASTLE_X);
+				rookCoords.x = 7;
+				rookCastleCoords.x = ROOK_SHORT_CASTLE_X;
+			}
+
+			removePiece(rookCoords);
+			assert(getTile(rookCastleCoords).type == EMPTY);
+			setTile(rookCastleCoords, BoardTile(from.color, ROOK));
+		}
+	}
+	
+	removePiece(move.from);
+	setTile(move.to, from);
 }

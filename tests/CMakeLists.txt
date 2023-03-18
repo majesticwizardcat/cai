@@ -15,3 +15,6 @@ target_link_libraries(BoardHashingTest Game)
 
 add_executable(MinMaxAiTest min-max-ai-test.cpp)
 target_link_libraries(MinMaxAiTest Game)
+
+add_executable(OptimalSeed optimal-seed.cpp)
+target_link_libraries(OptimalSeed Game)

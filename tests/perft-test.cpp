@@ -154,8 +154,6 @@ const std::vector<PerftTest> TESTS = {
 };
 
 int main () {
-	std::cout << "Size of board: " << sizeof(ChessBoard) << '\n';
-	std::cout << "Size of Move: " << sizeof(MovesVector) << '\n';
 	bool anyFail = false;
 	std::chrono::time_point start = std::chrono::high_resolution_clock::now();
 	const unsigned long long allocationsBeforeTests = allocs;

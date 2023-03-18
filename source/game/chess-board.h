@@ -27,7 +27,7 @@ public:
 	}
 
 	inline size_t getHash() const {
-		return (m_tileData[0] ^ m_tileData[1] ^ m_tileData[2] ^ m_tileData[3]) + m_positionData;
+		return m_hash;
 	}
 
 	inline Color getNextPlayerColor() const {
@@ -54,10 +54,31 @@ public:
 		return isFirstPair ? BoardTile(pair.color0, pair.type0) : BoardTile(pair.color1, pair.type1);
 	}
 
+	inline bool canWhiteLongCastle() const {
+		return m_positionInfo.canWhiteLongCastle;
+	}
+
+	inline bool canBlackLongCastle() const {
+		return m_positionInfo.canBlackLongCastle;
+	}
+
+	inline bool canWhiteShortCastle() const {
+		return m_positionInfo.canWhiteShortCastle;
+	}
+
+	inline bool canBlackShortCastle() const {
+		return m_positionInfo.canBlackShortCastle;
+	}
+
+	inline TileCoords getEnPassantCoords() const {
+		return m_positionInfo.enPassantSquare;
+	}
+
 	void printBoard() const;
 	void printMoveOnBoard(const BoardMove& move) const;
 	void getMoves(Color color, MovesVector& outMoves) const;
 	void playMove(const BoardMove& move);
+	void calculateHashFromCurrentState();
 	bool isKingInCheck(Color color) const;
 	bool isMoveValid(const BoardMove& move) const;
 	bool isDraw() const;
@@ -81,6 +102,8 @@ private:
 			TileCoords enPassantSquare;
 		} m_positionInfo;
 	};
+
+	uint64_t m_hash;
 
 // Inline Helper functions
 	inline uint8_t index(int8_t x, int8_t y) const {
@@ -129,6 +152,7 @@ private:
 	void getQueenMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const;
 	void getPawnMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const;
 	void getKingMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const;
+	void updateBoardDataFromMove(const BoardMove& move);
 };
 
 struct BoardHasher {
