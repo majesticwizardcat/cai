@@ -74,13 +74,18 @@ public:
 		return m_positionInfo.enPassantSquare;
 	}
 
+	inline bool isKingInCheck(Color color) const {
+		TileCoords kingCoords = findKing(color);
+		return isAttacked(color, kingCoords);
+	}
+
 	void printBoard() const;
 	void printMoveOnBoard(const BoardMove& move) const;
 	void getMoves(Color color, MovesVector& outMoves) const;
 	void playMove(const BoardMove& move);
 	void calculateHashFromCurrentState();
-	bool isKingInCheck(Color color) const;
-	bool isMoveValid(const BoardMove& move) const;
+	bool isAttacked(Color color, const TileCoords& coords) const;
+	bool isMoveValid(const BoardMove& move, const TileCoords& kingCoords) const;
 	bool isDraw() const;
 
 private:
@@ -152,7 +157,7 @@ private:
 	void getQueenMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const;
 	void getPawnMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const;
 	void getKingMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const;
-	void updateBoardDataFromMove(const BoardMove& move);
+	void updateBoardDataFromMove(const BoardMove& move, BoardTile fromTile);
 };
 
 struct BoardHasher {

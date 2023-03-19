@@ -196,22 +196,24 @@ void ChessBoard::printMoveOnBoard(const BoardMove& move) const {
 }
 
 void ChessBoard::getMoves(Color color, MovesVector& outMoves) const {
+	TileCoords kingCoords;
 	for (uint8_t x = 0; x < BOARD_SIZE; ++x) {
 		for (uint8_t y = 0; y < BOARD_SIZE; ++y) {
 			const BoardTile tile = getTile(x, y);
 			if (tile.type != EMPTY && tile.color == color) {
+				if (tile.type == KING) {
+					kingCoords = TileCoords(x, y);
+				}
 				getMovesForPiece(tile, x, y, outMoves);
 			}
 		}
 	}
 
-	uint32_t index = 0;
-	while (index < outMoves.size()) {
-		if (!isMoveValid(outMoves[index])) {
-			outMoves.erase(index);
-		}
-		else {
-			index++;
+	assert(kingCoords.areValid() && getTile(kingCoords).type == KING && getTile(kingCoords).color == color); // We must have a king of the same color
+	for (uint8_t i = 0; i < outMoves.size(); ++i) {
+		if (!isMoveValid(outMoves[i], kingCoords)) {
+			outMoves.erase(i);
+			--i;
 		}
 	}
 }
@@ -353,70 +355,48 @@ void ChessBoard::calculateHashFromCurrentState() {
 	}
 }
 
-bool ChessBoard::isKingInCheck(Color color) const {
+bool ChessBoard::isAttacked(Color color, const TileCoords& coords) const {
 	MovesVector moves;
-	TileCoords kingTile = findKing(color);
-	getBishopMoves(color, kingTile.x, kingTile.y, moves);
-	for (const BoardMove& m : moves) {
-		BoardTile attackedTile = getTile(m.to);
-		if (attackedTile.type == QUEEN || attackedTile.type == BISHOP) {
+	getQueenMoves(color, coords.x, coords.y, moves);
+
+	const bool isWhite = color == WHITE;
+	for (const auto& m : moves) {
+		const TileType attackerType = getTile(m.to).type;
+		if (attackerType == QUEEN) {
+			return true;
+		}
+
+		const int8_t absDeltaX = std::abs(coords.x - m.to.x);
+		const int8_t absDeltaY = std::abs(coords.y - m.to.y);
+		const bool isDiag = absDeltaX == absDeltaY;
+		if ((isDiag && attackerType == BISHOP) || (!isDiag && attackerType == ROOK)) {
+			return true;
+		}
+
+		const bool isNeighbour = absDeltaX <= 1 && absDeltaY <= 1;
+		const bool isAttackedByPawn  = isDiag && isNeighbour && ((isWhite && m.to.y > coords.y) || (!isWhite && m.to.y < coords.y));
+		if ((isNeighbour && attackerType == KING) || (isAttackedByPawn && attackerType == PAWN)) {
 			return true;
 		}
 	}
+
 	moves.clear();
-
-	getRookMoves(color, kingTile.x, kingTile.y, moves);
-	for (const BoardMove& m : moves) {
-		BoardTile attackedtile = getTile(m.to);
-		if (attackedtile.type == QUEEN || attackedtile.type == ROOK) {
+	getKnightMoves(color, coords.x, coords.y, moves);
+	for (const auto& m : moves) {
+		if (getTile(m.to).type == KNIGHT) {
 			return true;
-		}
-	}
-	moves.clear();
-
-	getKnightMoves(color, kingTile.x, kingTile.y, moves);
-	for (const BoardMove& m : moves) {
-		BoardTile attackedtile = getTile(m.to);
-		if (attackedtile.type == KNIGHT) {
-			return true;
-		}
-	}
-	moves.clear();
-
-	getSurroundingMoves(color, kingTile.x, kingTile.y, moves);
-	for (const BoardMove& m : moves) {
-		BoardTile attackedTile = getTile(m.to);
-		if (attackedTile.type == KING) {
-			return true;
-		}
-	}
-
-	int8_t dir = color == Color::WHITE ? 1 : -1;
-	int8_t pawnY = kingTile.y + dir;
-	if (pawnY >= 0 && pawnY < BOARD_SIZE) {
-		TileCoords pawnCoords(INVALID, pawnY);
-		for (int8_t i = -1; i <= 1; ++i) {
-			pawnCoords.x = kingTile.x + i;
-			if (i == 0 || pawnCoords.x < 0 || pawnCoords.x >= BOARD_SIZE) {
-				continue;
-			}
-
-			const BoardTile pawnTile = getTile(pawnCoords);
-			if (pawnTile.type == PAWN && pawnTile.color != color) {
-				return true;
-			}
 		}
 	}
 
 	return false;
 }
 
-bool ChessBoard::isMoveValid(const BoardMove& move) const {
+bool ChessBoard::isMoveValid(const BoardMove& move, const TileCoords& kingCoords) const {
 	const BoardTile fromTile = getTile(move.from);
 
 	if (move.isCastle(fromTile.type)) {
 		assert(fromTile.type == KING);
-		if (isKingInCheck(fromTile.color)) { // cannot be in check at the current board before and during castling
+		if (isAttacked(fromTile.color, kingCoords)) { // cannot be in check at the current board before and during castling
 			return false;
 		}
 
@@ -432,15 +412,22 @@ bool ChessBoard::isMoveValid(const BoardMove& move) const {
 		}
 
 		ChessBoard midPositionPlayed(*this);
-		midPositionPlayed.updateBoardDataFromMove(inBetween);
-		if (midPositionPlayed.isKingInCheck(fromTile.color)) {
+		midPositionPlayed.updateBoardDataFromMove(inBetween, fromTile);
+		assert(midPositionPlayed.getTile(inBetween.to).type == KING);
+		if (midPositionPlayed.isAttacked(fromTile.color, inBetween.to)) {
 			return false;
 		}
 	}
 
 	ChessBoard movePlayedBoard(*this);
-	movePlayedBoard.updateBoardDataFromMove(move);
-	return !movePlayedBoard.isKingInCheck(fromTile.color);
+	movePlayedBoard.updateBoardDataFromMove(move, fromTile);
+	if (fromTile.type == KING) {
+		assert(movePlayedBoard.getTile(move.to).type == KING);
+		return !movePlayedBoard.isAttacked(fromTile.color, move.to); // the king moved to the new position
+	}
+
+	assert(movePlayedBoard.getTile(kingCoords).type == KING);
+	return !movePlayedBoard.isAttacked(fromTile.color, kingCoords); // otherwise the king remained where he was
 }
 
 bool ChessBoard::isDraw() const {
@@ -675,18 +662,17 @@ void ChessBoard::getKingMoves(Color color, int8_t sx, int8_t sy, MovesVector& ou
 	}
 }
 
-void ChessBoard::updateBoardDataFromMove(const BoardMove& move) {
+void ChessBoard::updateBoardDataFromMove(const BoardMove& move, BoardTile fromTile) {
 	assert(getTile(move.to).type != KING); // There should not be a move played that captures the king
-	BoardTile from = getTile(move.from);
 	if (move.promotionType != EMPTY) {
-		from.type = move.promotionType;
+		fromTile.type = move.promotionType;
 	}
 
 	if (move.enPassantPawn.areValid()) {
-		assert(from.type == PAWN && move.enPassantPawn.areValid() && getTile(move.enPassantPawn).type == PAWN);
+		assert(fromTile.type == PAWN && move.enPassantPawn.areValid() && getTile(move.enPassantPawn).type == PAWN);
 		removePiece(move.enPassantPawn);
 	}
-	else if (from.type == KING) {
+	else if (fromTile.type == KING) {
 		if (move.isCastle(KING)) {
 			TileCoords rookCoords(INVALID, move.from.y);
 			TileCoords rookCastleCoords(INVALID, move.from.y);
@@ -702,10 +688,10 @@ void ChessBoard::updateBoardDataFromMove(const BoardMove& move) {
 
 			removePiece(rookCoords);
 			assert(getTile(rookCastleCoords).type == EMPTY);
-			setTile(rookCastleCoords, BoardTile(from.color, ROOK));
+			setTile(rookCastleCoords, BoardTile(fromTile.color, ROOK));
 		}
 	}
 	
 	removePiece(move.from);
-	setTile(move.to, from);
+	setTile(move.to, fromTile);
 }
