@@ -13,16 +13,18 @@ typedef MinMaxTree<ChessBoardEvalType, ChessBoardEvaluator, CHESS_BOARD_MIN_EVAL
 
 class MinMaxAiPlayer : public Player {
 public:
-	MinMaxAiPlayer(Color color, bool printEval, bool randomPadding)
+	MinMaxAiPlayer(Color color, bool printEval, bool randomPadding, uint32_t numOfThreads)
 		: Player(color)
 		, m_printEval(printEval)
-		, m_useRandomPadding(randomPadding) { }
+		, m_useRandomPadding(randomPadding)
+		, m_numOfThreads(numOfThreads) { }
 
 	MoveResult getMove(const ChessBoard& board, BoardMove* move);
 
 private:
 	bool m_printEval;
 	bool m_useRandomPadding;
+	uint32_t m_numOfThreads;
 	RandomGenerator m_rgen;
 	std::mutex m_evalMutex;
 	std::atomic<uint8_t> m_nextMoveIndexAtomic;

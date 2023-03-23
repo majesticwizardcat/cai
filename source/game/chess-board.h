@@ -19,11 +19,11 @@ public:
 	ChessBoard(const std::string& fen);
 
 	inline bool operator==(const ChessBoard& other) const {
-		return m_tileData[0] == other.m_tileData[0]
-			&& m_tileData[1] == other.m_tileData[1]
-			&& m_tileData[2] == other.m_tileData[2]
-			&& m_tileData[3] == other.m_tileData[3]
-			&& m_positionData == other.m_positionData;
+		return memcmp(this, &other, sizeof(ChessBoard)) == 0;
+	}
+
+	inline bool operator!=(const ChessBoard& other) const {
+		return memcmp(this, &other, sizeof(ChessBoard)) != 0;
 	}
 
 	inline size_t getHash() const {
@@ -52,6 +52,10 @@ public:
 		const bool isFirstPair = (x & 0b1) == 0;
 		const BoardTilePair& pair = m_boardTiles[index(x, y)];
 		return isFirstPair ? BoardTile(pair.color0, pair.type0) : BoardTile(pair.color1, pair.type1);
+	}
+
+	inline BoardTile getTile(const TileCoords& coords) const { 
+		return getTile(coords.x, coords.y);
 	}
 
 	inline bool canWhiteLongCastle() const {
@@ -114,10 +118,6 @@ private:
 	inline uint8_t index(int8_t x, int8_t y) const {
 		assert(x < BOARD_SIZE && y < BOARD_SIZE);
 		return y * PAIRS_PER_ROW + (x >> 1);
-	}
-
-	inline BoardTile getTile(const TileCoords& coords) const { 
-		return getTile(coords.x, coords.y);
 	}
 
 	inline void setTile(uint8_t x, uint8_t y, const BoardTile& tile) {

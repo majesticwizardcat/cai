@@ -8,15 +8,15 @@ template <typename EvalType, typename Evaluator, EvalType MaxEvaluation, EvalTyp
 
 template <typename EvalType, typename Evaluator, EvalType MinEvaluation, EvalType MaxEvaluation> class MinMaxTree {
 public:
-	typedef ankerl::unordered_dense::map<ChessBoard, EvalType, BoardHasher> MinMaxMemoMap;
+	typedef ankerl::unordered_dense::map<uint64_t, EvalType> MinMaxMemoMap;
 
-	MinMaxTree()
+	constexpr MinMaxTree()
 			: m_minEval(MaxEvaluation)
 			, m_maxEval(MinEvaluation) { }
 
 	EvalType expand(const ChessBoard& rootPosition, uint8_t depth) {
 		const auto expandFromInner = [this](const ChessBoard& currentPosition, uint8_t currentDepth, const auto recFunc) {
-			auto it = m_memo.find(currentPosition);
+			auto it = m_memo.find(currentPosition.getHash());
 			if (it != m_memo.end()) {
 				return it->second;
 			}
@@ -27,7 +27,7 @@ public:
 
 			if (currentDepth == 0 || moves.empty()) {
 				EvalType eval = Evaluator()(currentPosition, moves);
-				m_memo[currentPosition] = eval;
+				m_memo[currentPosition.getHash()] = eval;
 				return eval;
 			}
 			
@@ -51,7 +51,7 @@ public:
 					m_minEval = std::min(m_minEval, eval);
 				}
 			}
-			m_memo[currentPosition] = eval;
+			m_memo[currentPosition.getHash()] = eval;
 			return eval;
 		};
 

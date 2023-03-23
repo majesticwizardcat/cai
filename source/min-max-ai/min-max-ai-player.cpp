@@ -5,7 +5,7 @@ MoveResult MinMaxAiPlayer::getMove(const ChessBoard& board, BoardMove* move) {
 
 	ChessBoardEvalType randomPad = m_useRandomPadding ? m_rgen.getInt16() : 0;
 	randomPad = randomPad > 0 ? (randomPad & 0b11) : -(randomPad & 0b11);
-	auto getBetterEvalAndSwapIndices = [&randomPad](Color color, ChessBoardEvalType newEval,
+	const auto getBetterEvalAndSwapIndices = [&randomPad](Color color, ChessBoardEvalType newEval,
 			ChessBoardEvalType currentBest, uint8_t* newIndex, uint8_t* currentBestIndex) {
 		// We are adding some randomness to same evaluated positions so the ai can have variaety 
 		// This is also affected by what eval has each thread checked locally
@@ -49,10 +49,9 @@ MoveResult MinMaxAiPlayer::getMove(const ChessBoard& board, BoardMove* move) {
 		eval = getBetterEvalAndSwapIndices(m_color, localEval, eval, &localBestMoveIndex, &bestMoveIndex);
 	};
 
-	uint8_t numOfThreads = std::thread::hardware_concurrency();
 	std::vector<std::thread> threads;
-	threads.reserve(numOfThreads);
-	for (uint i = 0; i < numOfThreads; ++i) {
+	threads.reserve(m_numOfThreads);
+	for (uint i = 0; i < m_numOfThreads; ++i) {
 		threads.emplace_back(runEval);
 	}
 

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <chrono>
 
-const uint32_t TESTS = 15;
+const uint32_t TESTS = 100;
 
 int main() {
 	// Check a position
@@ -23,7 +23,7 @@ int main() {
 	ChessBoard board;
 	BoardMove m;
 	for (uint32_t i = 0; i < TESTS; ++i) {
-		MinMaxAiPlayer pl(board.getNextPlayerColor(), false, false);
+		MinMaxAiPlayer pl(board.getNextPlayerColor(), false, false, 1);
 		MoveResult res = pl.getMove(board, &m);
 		if (res == MoveResult::MOVE_OK && !board.isDraw()) {
 			board.playMove(m);

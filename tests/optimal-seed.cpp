@@ -7,7 +7,7 @@
 #include <ios>
 
 // Generates the most optimal hash table possible
-const uint64_t POSITIONS_TO_TEST = 1000000000000;
+const uint64_t POSITIONS_TO_TEST = 100000000000;
 const boardhashing::pcg32_random_t LAST_POSITION_CHECKED = { 0x66664e33e91bc3d0, 0x0 };
 
 // Copied from board hashing
@@ -118,7 +118,7 @@ uint64_t getCollisions(boardhashing::pcg32_random_t seed) {
 }
 
 int main(int args, char** argv) {
-//	assert(false); // Only run in debug if required
+	assert(false); // Only run in debug if required
 	std::cout << "Looking for optimal seed starting with seed gen with state: 0x" << std::hex << LAST_POSITION_CHECKED.state << ", incr: 0x" << LAST_POSITION_CHECKED.inc << '\n';
 	std::cout << "Currently trying " << std::dec << POSITIONS_TO_TEST << " positions per seed" << '\n';
 	std::cout << "This might take a while..." << '\n';

@@ -2,7 +2,7 @@
 
 #include "game/chess-board.h"
 
-typedef int16_t ChessBoardEvalType;
+typedef int64_t ChessBoardEvalType;
 
 // Max evaluation is 9 queens (8 promoted pawns + 1 queen), 2 rooks, 2 bishops, 2 knights
 // Total points = +- (9 * 10 + 2 * 5 + 2 * 3 + 2 * 2) * 10 = +-1100
