@@ -20,5 +20,10 @@ Currently WIP, the min max AI searches for all positions until a depth. As a sma
 ### Multithreading
 Peft tests as well min max tree expanding utilize multithreading.
 
+## External libraries
+Everything in cai is writen entirely from scratch expect the helper libs to optimize a few things that would otherwise require too much time to research and implement. The libraries used on this project are:
+- [PCG](https://pcg-random.org/): My favorite random number generation library. It's fast and has extremely good entropy.
+- [Unordrered dense](https://github.com/martinus/unordered_dense): As far as I tested, this was the fastest hash table that I could find for out of the box usage. Might replace it with something of my own to fit the specific usage here, but so far this map has served me very well.
+
 ## Currently WIP
 Currently, I'm working on improving the Min Max AI as well as a Hybrid AI that utilizes MinMaxing and neural networks.
