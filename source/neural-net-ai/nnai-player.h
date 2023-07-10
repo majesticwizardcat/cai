@@ -15,10 +15,13 @@ const float REDUCTION = 1000.0f;
 class NNAIPlayer : public Player {
 public:
 	NNAIPlayer() = delete;
-	NNAIPlayer(Color color, const NNAI* ai, uint cyclesPerMove)
-		: Player(color)
-		, m_ai(ai)
-		, m_cyclesPerMove(cyclesPerMove) { }
+	NNAIPlayer(Color color, const NNAI* ai, uint cyclesPerMove, NeuronBuffer<float>* const neuronBuffer)
+			: Player(color)
+			, m_ai(ai)
+			, m_cyclesPerMove(cyclesPerMove)
+			, m_neuronBuffer(neuronBuffer) {
+		assert(neuronBuffer);
+	}
 
 	MoveResult getMove(const ChessBoard& board, BoardMove* outMove);
 
@@ -55,6 +58,7 @@ private:
 	const NNAI* m_ai;
 	uint m_cyclesPerMove;
 	RandomGenerator m_rgen;
+	NeuronBuffer<float>* const m_neuronBuffer;
 
 	inline void reduce(NNPPStackVector<float>& vec) const {
 		for (uint i = 0; i < vec.size(); ++i) {
@@ -66,14 +70,14 @@ private:
 
 	inline void analyze(Position* position, uint cycles) const {
 		propagate(position, cycles);
-		NNPPStackVector<float> res = m_ai->feedAt(ANALYZER_NETWORK_INDEX, position->board);
+		NNPPStackVector<float> res = m_ai->feedAt(ANALYZER_NETWORK_INDEX, position->board, *m_neuronBuffer);
 		reduce(res);
 		position->evaluation = res[0];
 	}
 
 	inline void propagate(Position* position, uint cycles) const {
 		for (int i = 0; i < cycles; ++i) {
-			NNPPStackVector<float> out = m_ai->feedAt(PROPAGATOR_NETWORK_INDEX, position->board);
+			NNPPStackVector<float> out = m_ai->feedAt(PROPAGATOR_NETWORK_INDEX, position->board, *m_neuronBuffer);
 			reduce(out);
 			position->board = std::move(out);
 		}

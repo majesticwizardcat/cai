@@ -21,7 +21,7 @@ uint NNAITrainer::findAndStorePlayerIndex() {
 	return index;
 }
 
-std::vector<NNPPTrainingUpdate<float>> NNAITrainer::runSession() {
+std::vector<NNPPTrainingUpdate<float>> NNAITrainer::runSession(NeuronBuffer<float>& neuronBuffer) {
 	std::vector<NNPPTrainingUpdate<float>> scoreUpdates;
 	uint whitePlayerIndex = findAndStorePlayerIndex();
 	uint blackPlayerIndex = findAndStorePlayerIndex();
@@ -35,7 +35,7 @@ std::vector<NNPPTrainingUpdate<float>> NNAITrainer::runSession() {
 	NNAI* white = m_trainee->getNNAiPtrAt(whitePlayerIndex);
 	NNAI* black = m_trainee->getNNAiPtrAt(blackPlayerIndex);
 
-	GameResult result = runGame(white, black, cycles);
+	GameResult result = runGame(white, black, cycles, neuronBuffer);
 	const float gamePoints = cycles * POINTS_PER_CYCLE;
 	float pointsForWhite = 0.0f;
 	float pointsForBlack = 0.0f;
@@ -83,10 +83,10 @@ uint NNAITrainer::sessionsTillEvolution() const {
 	return sessionsTillEvol - m_trainee->getSessionsTrainedThisGen();
 }
 
-GameResult NNAITrainer::runGame(const NNAI* white, const NNAI* black, uint cycles) {
+GameResult NNAITrainer::runGame(const NNAI* white, const NNAI* black, uint cycles, NeuronBuffer<float>& neuronBuffer) {
 	ChessBoard b;
-	NNAIPlayer whitePlayer(Color::WHITE, white, cycles);
-	NNAIPlayer blackPlayer(Color::BLACK, black, cycles);
+	NNAIPlayer whitePlayer(Color::WHITE, white, cycles, &neuronBuffer);
+	NNAIPlayer blackPlayer(Color::BLACK, black, cycles, &neuronBuffer);
 	Game g(b, &whitePlayer, &blackPlayer, MAX_MOVES, false);
 	return g.start(false);
 }

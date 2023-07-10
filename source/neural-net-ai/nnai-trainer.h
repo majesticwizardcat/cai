@@ -54,7 +54,7 @@ public:
 		, m_realDist(0.0f, 1.0f) { }
 
 protected:
-	std::vector<NNPPTrainingUpdate<float>> runSession() override;
+	std::vector<NNPPTrainingUpdate<float>> runSession(NeuronBuffer<float>& neuronBuffer) override;
 	uint sessionsTillEvolution() const override;
 	float getAvgScoreImportance() const override { return 0.5f; }
 
@@ -99,6 +99,6 @@ private:
 		return std::min(CYCLES_PER_HOUR, CYCLES_PER_SECOND + static_cast<uint>(m_realDist(m_randomDevice) * m_trainee->getGenerartion() * CYCLES_PER_GEN));
 	}
 
-	GameResult runGame(const NNAI* white, const NNAI* black, uint cycles);
+	GameResult runGame(const NNAI* white, const NNAI* black, uint cycles, NeuronBuffer<float>& neuronBuffer);
 	uint findAndStorePlayerIndex();
 };

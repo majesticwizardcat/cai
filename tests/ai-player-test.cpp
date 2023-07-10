@@ -4,8 +4,9 @@
 
 int main() {
 	NNAI ai(0, CAI_LAYERS);
+	auto neuronBuffer = allocNeuronBuffer<float>();
 	ai.initRandomUniform(-1.0f, 1.0f);
-	NNAIPlayer aiPlayer(Color::WHITE, &ai, 120);
+	NNAIPlayer aiPlayer(Color::WHITE, &ai, 120, &neuronBuffer);
 	ChessBoard board;
 	BoardMove m;
 
