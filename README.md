@@ -12,7 +12,7 @@ For hashing, a table of random numbers is generated in compile time. These numbe
 [Perft Tests](https://www.chessprogramming.org/Perft_Results) are used to ensure the board is working properly. Due to how fast the board is, we can reach a good depth to test the board.
 
 ### Neural Networks
-The NNAi has a simple implementation that works quite good for the purposes of this project. Genetic algorithms are used to incrementally find the better ai. So far unfortunately, there are no good results from this AI. Even after running it for a week, the AI is still very random. More research requires on this.
+The NNAi has a simple implementation that works quite good for the purposes of this project. Genetic algorithms are used to incrementally find the better ai. So far unfortunately, there are no good results from this AI. Even after running it for a week, the AI is still very random. More research is required on this.
 
 ### MinMax AI
 Currently WIP, the min max AI searches for all positions until a depth. As a small optimization, it uses a basic alpha-beta pruning to decrease the number of positions as well as a hash table to keep already evaluated positions.
