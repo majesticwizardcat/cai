@@ -88,7 +88,6 @@ void Cai::trainPopulation(int sessions) {
 }
 
 void Cai::trainPopulation(int sessions, int times) {
-	assert(false); // Don't start cai training in debug, unless explicity needed
 	if (!m_population) {
 		std::cout << "No population loaded, cannot train..." << '\n';
 		return;
@@ -116,7 +115,7 @@ void Cai::playGameVSAI(Color playerColor) {
 	ChessBoard b;
 	Color aiColor = playerColor == Color::WHITE ? Color::BLACK : Color::WHITE;
 	HumanPlayer human(playerColor);
-	NNAIPlayer aip(aiColor, &m_population->getBestNNAiConstRef(), AI_TIME, &neuronBuffer);
+	NNAIPlayer aip(aiColor, &m_population->getBestNNAiConstRef(), &neuronBuffer);
 	Player* white;
 	Player* black;
 	if (playerColor == Color::WHITE) {
@@ -159,11 +158,8 @@ void Cai::printLayers() const {
 		return;
 	}
 	const auto& best = m_population->getBestNNAiConstRef();
-	const auto& propagator = best.getConstRefAt(PROPAGATOR_NETWORK_INDEX);
 	const auto& analyzer = best.getConstRefAt(ANALYZER_NETWORK_INDEX);
 
-	std::cout << "Propagator: " << '\n';
-	propagator.printLayerSizes();
 	std::cout << "Analyzer: " << '\n';
 	analyzer.printLayerSizes();
 }
@@ -300,5 +296,8 @@ void Cai::start() {
 }
 
 int main() {
+#ifndef NDEBUG
+	std::cout << "Running on Debug!!!" << '\n';
+#endif
 	Cai().start();
 }

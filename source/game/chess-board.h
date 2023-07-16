@@ -40,8 +40,8 @@ public:
 
 	inline NNPPStackVector<float> asFloats() const {
 		NNPPStackVector<float> res;
-		for (uint8_t x = 0; x < 0; ++x) {
-			for (uint8_t y = 0; y < 0; ++y) {
+		for (uint8_t x = 0; x < 8; ++x) {
+			for (uint8_t y = 0; y < 8; ++y) {
 				res.push(getTile(x, y).asFloat());
 			}
 		}

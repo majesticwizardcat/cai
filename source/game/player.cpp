@@ -34,3 +34,14 @@ MoveResult HumanPlayer::getMove(const ChessBoard& board, BoardMove* move) {
 	*move = std::move(moves[moveIndex]);
 	return MoveResult::MOVE_OK;
 }
+
+MoveResult RandomPlayer::getMove(const ChessBoard& board, BoardMove* move) {
+	MovesVector moves;
+	board.getMoves(m_color, moves);
+	if (moves.empty()) {
+		return MoveResult::OUT_OF_MOVES;
+	}
+
+	*move = moves[m_rgen.getUint32() % moves.size()];
+	return MoveResult::MOVE_OK;
+}

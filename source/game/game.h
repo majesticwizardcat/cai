@@ -20,6 +20,7 @@ public:
 		, m_white(white)
 		, m_black(black)
 		, m_current(m_white)
+		, m_numMovesPlayed(0)
 		, m_maxMoves(maxMoves)
 		, m_storeMoves(storeMoves) { }
 
@@ -32,6 +33,7 @@ private:
 	Player* m_black;
 	Player* m_current;
 	std::vector<ChessBoard> m_boardStates;
+	uint m_numMovesPlayed;
 	uint m_maxMoves;
 	bool m_storeMoves;
 

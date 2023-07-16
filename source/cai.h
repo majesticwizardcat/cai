@@ -10,10 +10,9 @@
 #include <string>
 #include <memory>
 
-static const ulong VERSION = 9;
+static const ulong VERSION = 10;
 static const uint DEFAULT_POPULATION = 100;
 static const std::string CAI_EXT = ".cai";
-static const uint AI_TIME = CYCLES_PER_HOUR;
 
 class Cai {
 private:

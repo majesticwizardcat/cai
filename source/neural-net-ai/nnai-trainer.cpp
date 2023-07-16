@@ -26,35 +26,28 @@ std::vector<NNPPTrainingUpdate<float>> NNAITrainer::runSession(NeuronBuffer<floa
 	uint whitePlayerIndex = findAndStorePlayerIndex();
 	uint blackPlayerIndex = findAndStorePlayerIndex();
 
-	uint cycles;
-	{
-		std::lock_guard<std::mutex> lock(m_occupiedSetLock);
-		cycles = cyclesToUse();
-	}
-
 	NNAI* white = m_trainee->getNNAiPtrAt(whitePlayerIndex);
 	NNAI* black = m_trainee->getNNAiPtrAt(blackPlayerIndex);
 
-	GameResult result = runGame(white, black, cycles, neuronBuffer);
-	const float gamePoints = cycles * POINTS_PER_CYCLE;
-	float pointsForWhite = 0.0f;
-	float pointsForBlack = 0.0f;
-	const float whitePointsMult = calculateMultiplier(white->getScore(), black->getScore());
-	const float blackPointsMult = 1.0f / whitePointsMult;
+	float pointsForWhite = runGameAgainstRandom(white, neuronBuffer);
+	float pointsForBlack = runGameAgainstRandom(black, neuronBuffer);
+	GameResult result = runGame(white, black, neuronBuffer);
+	const float gamePoints = calculatePoints(white->getScore(), black->getScore());
+	const float drawPoints = DRAW_POINTS * (gamePoints / POINTS_PER_GAME);
 
 	switch (result) {
 	case GameResult::WHITE_WINS:
-		pointsForWhite = gamePoints + 1.0f;
-		pointsForBlack = -gamePoints;
+		pointsForWhite += gamePoints + 1.0f;
+		pointsForBlack += -gamePoints;
 		break;
 	case GameResult::BLACK_WINS:
-		pointsForWhite = -gamePoints;
-		pointsForBlack = gamePoints + 1.0f;
+		pointsForWhite += -gamePoints;
+		pointsForBlack += gamePoints + 1.0f;
 		break;
 	case GameResult::DRAW:
 	case GameResult::DRAW_NO_MOVES:
-		pointsForWhite = white->getScore() > black->getScore() ? -whitePointsMult : whitePointsMult;
-		pointsForBlack = white->getScore() > black->getScore() ? whitePointsMult : -whitePointsMult;
+		pointsForWhite += white->getScore() > black->getScore() ? -drawPoints : drawPoints;
+		pointsForBlack += white->getScore() > black->getScore() ? drawPoints : -drawPoints;
 		break;
 	default:
 		break;
@@ -64,8 +57,8 @@ std::vector<NNPPTrainingUpdate<float>> NNAITrainer::runSession(NeuronBuffer<floa
 		break;
 	}
 
-	scoreUpdates.emplace_back(white, pointsForWhite * whitePointsMult, false);
-	scoreUpdates.emplace_back(black, pointsForBlack * blackPointsMult, false);
+	scoreUpdates.emplace_back(white, pointsForWhite, false);
+	scoreUpdates.emplace_back(black, pointsForBlack, false);
 
 	{
 		std::lock_guard<std::mutex> lock(m_occupiedSetLock);
@@ -83,10 +76,18 @@ uint NNAITrainer::sessionsTillEvolution() const {
 	return sessionsTillEvol - m_trainee->getSessionsTrainedThisGen();
 }
 
-GameResult NNAITrainer::runGame(const NNAI* white, const NNAI* black, uint cycles, NeuronBuffer<float>& neuronBuffer) {
+GameResult NNAITrainer::runGame(const NNAI* white, const NNAI* black, NeuronBuffer<float>& neuronBuffer) const {
 	ChessBoard b;
-	NNAIPlayer whitePlayer(Color::WHITE, white, cycles, &neuronBuffer);
-	NNAIPlayer blackPlayer(Color::BLACK, black, cycles, &neuronBuffer);
-	Game g(b, &whitePlayer, &blackPlayer, MAX_MOVES, false);
+	NNAIPlayer whitePlayer(Color::WHITE, white, &neuronBuffer);
+	NNAIPlayer blackPlayer(Color::BLACK, black, &neuronBuffer);
+	Game g(b, &whitePlayer, &blackPlayer, MAX_MOVES_PER_GAME, false);
 	return g.start(false);
+}
+
+float NNAITrainer::runGameAgainstRandom(const NNAI* ai, NeuronBuffer<float>& neuronBuffer) const {
+	ChessBoard b;
+	NNAIPlayer aiPlayer(Color::WHITE, ai, &neuronBuffer);
+	RandomPlayer random(Color::BLACK);
+	Game g(b, &aiPlayer, &random, MAX_MOVES_PER_RANDOM_GAME, false);
+	return g.start(false) == GameResult::WHITE_WINS ? RANDOM_WIN_POINTS : 0.0f;
 }

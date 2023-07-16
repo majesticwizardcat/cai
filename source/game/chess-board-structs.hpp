@@ -8,6 +8,7 @@ typedef unsigned long long uint64_t;
 
 static const uint8_t BOARD_SIZE = 8;
 static const int8_t INVALID = -1;
+static const ulong MAX_MOVES = 255;
 
 struct TileCoords {
 	int8_t x : 4;
@@ -103,7 +104,6 @@ struct BoardTile {
 
 	inline float asFloat() const {
 		float color = color == WHITE ? 1.0f : -1.0f;
-		float start = 0.0f;
 		switch(type) {
 		case PAWN:
 			return 1.0f * color;
@@ -150,4 +150,4 @@ struct BoardMove {
 	}
 };
 
-typedef StackVector<BoardMove, 255> MovesVector;
+typedef StackVector<BoardMove, MAX_MOVES> MovesVector;

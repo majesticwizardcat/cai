@@ -12,4 +12,5 @@ vs-project/cai.vcxproj.user
 build
 *.nnpp
 vs-project
+.DS_Store
 

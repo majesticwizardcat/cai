@@ -5,7 +5,7 @@
 GameResult Game::start(bool verbose) {
 	BoardMove m;
 
-	while (m_maxMoves <= 0 || m_boardStates.size() < m_maxMoves) {
+	while (m_maxMoves <= 0 || m_numMovesPlayed < m_maxMoves) {
 		if (m_board.isDraw()) {
 			return GameResult::DRAW;
 		}
@@ -50,13 +50,14 @@ void Game::playMove(const BoardMove& move, bool verbose) {
 	if (m_storeMoves) {
 		m_boardStates.push_back(m_board);
 	}
+	m_numMovesPlayed++;
 	m_board.playMove(move);
 
 	nextPlayer();
 }
 
 void Game::revert() {
-	if (!m_storeMoves || m_boardStates.size() < 1) {
+	if (m_boardStates.size() < 1) {
 		return;
 	}
 
@@ -65,4 +66,5 @@ void Game::revert() {
 	m_boardStates.pop_back();
 	m_board = m_boardStates.back();
 	m_boardStates.pop_back();
+	m_numMovesPlayed -= 2;
 }

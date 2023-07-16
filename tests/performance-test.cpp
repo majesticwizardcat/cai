@@ -14,19 +14,6 @@ int main() {
 	NeuronBuffer<float> neuronBuffer = allocNeuronBuffer<float>();
 
 	{
-		std::cout << "Running " << TESTS << " move fetches from ai with 2 seconds cycles per move" << '\n';
-		NNAIPlayer aiPlayer(Color::WHITE, &ai, 2 * CYCLES_PER_SECOND, &neuronBuffer);
-		BoardMove m;
-		auto start = std::chrono::high_resolution_clock::now();
-		for (uint i = 0; i < TESTS; ++i) {
-			ai.initRandomUniform(MIN_AI_WEIGHT_VALUE, MAX_AI_WEIGHT_VALUE);
-			aiPlayer.getMove(board, &m);
-		}
-		std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - start;
-		std::cout << "Done! Time taken: " << duration.count() << " seconds" <<  '\n';
-	}
-
-	{
 		const uint sessions = 100;
 		const uint threads = 4;
 		const uint size = 100;

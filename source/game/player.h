@@ -5,6 +5,7 @@ class HumanPlayer;
 
 #include "chess-board.h"
 #include "game.h"
+#include "tools/random-generator.h"
 
 class Player {
 protected:
@@ -28,3 +29,13 @@ public:
 	MoveResult getMove(const ChessBoard& board, BoardMove* move);
 };
 
+class RandomPlayer : public Player {
+public:
+	RandomPlayer() = delete;
+	RandomPlayer(Color color) : Player(color) { }
+
+	MoveResult getMove(const ChessBoard& board, BoardMove* move);
+
+private:
+	RandomGenerator m_rgen;
+};
