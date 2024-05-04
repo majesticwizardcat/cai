@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <nnpp.hpp>
 
 typedef unsigned char uint8_t;
@@ -21,7 +22,7 @@ struct TileCoords {
 		assert(y < BOARD_SIZE);
 	}
 
-	TileCoords() : TileCoords(INVALID, INVALID) { }
+	TileCoords() = default;
 
 	inline bool operator==(const TileCoords& other) const {
 		return x == other.x && y == other.y;
@@ -65,7 +66,7 @@ struct BoardTile {
 	Color color : 1;
 	TileType type : 3;
 
-	BoardTile() : BoardTile(WHITE, EMPTY) { }
+	BoardTile() = default;
 
 	BoardTile(Color color, TileType type)
 			: color(color)
@@ -125,22 +126,22 @@ struct BoardTile {
 };
 
 struct BoardMove {
-	// The rook coords are not needed and will be removed, reducing the BoardMove to a size of 4 bytes;
 	TileCoords from;
 	TileCoords to;
 	TileCoords enPassantPawn;
 	TileType promotionType;
 
-	BoardMove()
-			: promotionType(EMPTY) { }
+	BoardMove() = default;
 
 	BoardMove(uint8_t fromX, uint8_t fromY, uint8_t toX, uint8_t toY)
 			: promotionType(EMPTY)
+			, enPassantPawn(INVALID, INVALID)
 			, from(fromX, fromY)
 			, to(toX, toY) { }
 	
 	BoardMove(const TileCoords& from, const TileCoords& to)
 			: promotionType(EMPTY)
+			, enPassantPawn(INVALID, INVALID)
 			, from(from)
 			, to(to) { }
 	

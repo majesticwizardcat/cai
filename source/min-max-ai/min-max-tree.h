@@ -1,24 +1,33 @@
 #pragma once
 
-template <typename EvalType, typename Evaluator, EvalType MaxEvaluation, EvalType MinEvaluation> class MinMaxTree;
+class MinMaxTree;
 
 #include "game/chess-board.h"
+#include "min-max-ai/chess-board-evaluator.hpp"
 
 #include "unordered_dense.h"
 
-template <typename EvalType, typename Evaluator, EvalType MinEvaluation, EvalType MaxEvaluation> class MinMaxTree {
+class MinMaxTree {
 public:
-	typedef ankerl::unordered_dense::map<uint64_t, EvalType> MinMaxMemoMap;
+	union EvalDepth {
+		struct {
+			int16_t evaluation;
+			uint8_t depth;
+		};
+		uint64_t evalDepth;
+	};
 
-	constexpr MinMaxTree()
-			: m_minEval(MaxEvaluation)
-			, m_maxEval(MinEvaluation) { }
+	typedef ankerl::unordered_dense::map<uint64_t, EvalDepth> MinMaxMemoMap;
 
-	EvalType expand(const ChessBoard& rootPosition, uint8_t depth) {
+	MinMaxTree()
+			: m_minEval(CHESS_BOARD_MAX_EVALUATION)
+			, m_maxEval(CHESS_BOARD_MIN_EVALUATION) { }
+
+	inline int16_t expand(const ChessBoard& rootPosition, uint8_t depth) {
 		const auto expandFromInner = [this](const ChessBoard& currentPosition, uint8_t currentDepth, const auto recFunc) {
 			auto it = m_memo.find(currentPosition.getHash());
-			if (it != m_memo.end()) {
-				return it->second;
+			if (it != m_memo.end() && it->second.depth >= currentDepth) {
+				return it->second.evaluation;
 			}
 
 			Color nextPlayerColor = currentPosition.getNextPlayerColor();
@@ -26,24 +35,31 @@ public:
 			currentPosition.getMoves(nextPlayerColor, moves);
 
 			if (currentDepth == 0 || moves.empty()) {
-				EvalType eval = Evaluator()(currentPosition, moves);
-				m_memo[currentPosition.getHash()] = eval;
-				return eval;
+				EvalDepth evalDepth;
+				evalDepth.evaluation = evaluate(currentPosition, moves);
+				evalDepth.depth = 0;
+				m_memo[currentPosition.getHash()] = evalDepth;
+				return evalDepth.evaluation;
 			}
 			
-			EvalType eval = nextPlayerColor == WHITE ? MinEvaluation : MaxEvaluation;
-			for (const auto& m : moves) {
-				ChessBoard b(currentPosition);
-				b.playMove(m);
-				const EvalType newEval = recFunc(b, currentDepth - 1, recFunc);
-				if (nextPlayerColor == WHITE) {
+			int16_t eval = nextPlayerColor == WHITE ? CHESS_BOARD_MIN_EVALUATION : CHESS_BOARD_MAX_EVALUATION;
+			if (nextPlayerColor == WHITE) {
+				for (const auto& m : moves) {
+					ChessBoard b(currentPosition);
+					b.playMove(m);
+					const int16_t newEval = recFunc(b, currentDepth - 1, recFunc);
 					eval = std::max(eval, newEval);
 					if (eval > m_minEval) {
 						break;
 					}
 					m_maxEval = std::max(m_maxEval, eval);
 				}
-				else {
+			}
+			else {
+				for (const auto& m : moves) {
+					ChessBoard b(currentPosition);
+					b.playMove(m);
+					const int16_t newEval = recFunc(b, currentDepth - 1, recFunc);
 					eval = std::min(eval, newEval);
 					if (eval < m_maxEval) {
 						break;
@@ -51,7 +67,11 @@ public:
 					m_minEval = std::min(m_minEval, eval);
 				}
 			}
-			m_memo[currentPosition.getHash()] = eval;
+
+			EvalDepth evalDepth;
+			evalDepth.evaluation = eval;
+			evalDepth.depth = currentDepth;
+			m_memo[currentPosition.getHash()] = evalDepth;
 			return eval;
 		};
 
@@ -60,6 +80,6 @@ public:
 
 private:
 	MinMaxMemoMap m_memo;
-	EvalType m_minEval;
-	EvalType m_maxEval;
+	int16_t m_minEval;
+	int16_t m_maxEval;
 };

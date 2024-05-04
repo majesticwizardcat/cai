@@ -196,7 +196,7 @@ void ChessBoard::printMoveOnBoard(const BoardMove& move) const {
 }
 
 void ChessBoard::getMoves(Color color, MovesVector& outMoves) const {
-	TileCoords kingCoords;
+	TileCoords kingCoords(INVALID, INVALID);
 	for (uint8_t x = 0; x < BOARD_SIZE; ++x) {
 		for (uint8_t y = 0; y < BOARD_SIZE; ++y) {
 			const BoardTile tile = getTile(x, y);

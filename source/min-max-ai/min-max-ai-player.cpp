@@ -1,18 +1,13 @@
 #include "min-max-ai/min-max-ai-player.h"
 
 MoveResult MinMaxAiPlayer::getMove(const ChessBoard& board, BoardMove* move) {
-	m_nextMoveIndexAtomic = 0;
-
-	ChessBoardEvalType randomPad = m_useRandomPadding ? m_rgen.getInt16() : 0;
-	randomPad = randomPad > 0 ? (randomPad & 0b11) : -(randomPad & 0b11);
-	const auto getBetterEvalAndSwapIndices = [&randomPad](Color color, ChessBoardEvalType newEval,
-			ChessBoardEvalType currentBest, uint8_t* newIndex, uint8_t* currentBestIndex) {
+	/*
+	const auto getBetterEvalAndSwapIndices = [](Color color, ChessBoardEvalType newEval,
+			ChessBoardEvalType currentBest, uint8_t newIndex, uint8_t* currentBestIndex) {
 		// We are adding some randomness to same evaluated positions so the ai can have variaety 
 		// This is also affected by what eval has each thread checked locally
-		ChessBoardEvalType paddedNewEval = newEval + randomPad;
-		bool shouldSwap = (paddedNewEval == currentBest && *newIndex < *currentBestIndex)
-			|| (color == WHITE && paddedNewEval > currentBest)
-			|| (color == BLACK && paddedNewEval < currentBest);
+		ChessBoardEvalType paddedNewEval = newEval;
+		bool shouldSwap = (color == WHITE && paddedNewEval > currentBest) || (color == BLACK && paddedNewEval < currentBest);
 
 		if (shouldSwap) {
 			*currentBestIndex = *newIndex;
@@ -20,6 +15,7 @@ MoveResult MinMaxAiPlayer::getMove(const ChessBoard& board, BoardMove* move) {
 		}
 		return currentBest;
 	};
+	*/
 
 	MovesVector moves;
 	board.getMoves(m_color, moves);
@@ -34,7 +30,23 @@ MoveResult MinMaxAiPlayer::getMove(const ChessBoard& board, BoardMove* move) {
 	}
 
 	uint8_t bestMoveIndex = 0;
-	ChessBoardEvalType eval = m_color == WHITE ? CHESS_BOARD_MIN_EVALUATION : CHESS_BOARD_MAX_EVALUATION;
+	int16_t eval = m_color == WHITE ? CHESS_BOARD_MIN_EVALUATION : CHESS_BOARD_MAX_EVALUATION;
+	MinMaxTree minMaxTree;
+	for (uint i = 0; i < moves.size(); ++i) {
+		ChessBoard b(board);
+		b.playMove(moves[i]);
+		const int16_t positionEval = minMaxTree.expand(b, 7);
+
+		b.printMoveOnBoard(moves[i]);
+		std::cout << " -> Eval: " << positionEval << '\n';
+
+		if ((m_color == WHITE && positionEval > eval) || (m_color == BLACK && positionEval < eval)) {
+			bestMoveIndex = i;
+			eval = positionEval;
+		}
+	}
+
+	/*
 	auto runEval = [&moves, &board, &bestMoveIndex, &eval, &getBetterEvalAndSwapIndices, this]() {
 		MinMaxTreeChessBoard minMaxTree;
 		uint8_t localBestMoveIndex = 0;
@@ -43,7 +55,7 @@ MoveResult MinMaxAiPlayer::getMove(const ChessBoard& board, BoardMove* move) {
 			uint8_t localNextMoveIndex = m_nextMoveIndexAtomic++;
 			ChessBoard b(board);
 			b.playMove(moves[localNextMoveIndex]);
-			localEval = getBetterEvalAndSwapIndices(m_color, minMaxTree.expand(b, 6), localEval, &localNextMoveIndex, &localBestMoveIndex);
+			localEval = getBetterEvalAndSwapIndices(m_color, minMaxTree.expand(b, 5), localEval, &localNextMoveIndex, &localBestMoveIndex);
 		}
 		std::lock_guard<std::mutex> lock(m_evalMutex);
 		eval = getBetterEvalAndSwapIndices(m_color, localEval, eval, &localBestMoveIndex, &bestMoveIndex);
@@ -58,6 +70,7 @@ MoveResult MinMaxAiPlayer::getMove(const ChessBoard& board, BoardMove* move) {
 	for (auto& t : threads) {
 		t.join();
 	}
+	*/
 
 	*move = moves[bestMoveIndex];
 	if (m_printEval) {

@@ -9,8 +9,6 @@ class MinMaxAiPlayer;
 
 #include <mutex>
 
-typedef MinMaxTree<ChessBoardEvalType, ChessBoardEvaluator, CHESS_BOARD_MIN_EVALUATION, CHESS_BOARD_MAX_EVALUATION> MinMaxTreeChessBoard;
-
 class MinMaxAiPlayer : public Player {
 public:
 	MinMaxAiPlayer(Color color, bool printEval, bool randomPadding, uint32_t numOfThreads)
