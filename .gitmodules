@@ -3,4 +3,4 @@
 	url = https://github.com/loukoum/nnpp
 [submodule "standard-sauce"]
 	path = standard-sauce
-	url = git@github.com:majesticwizardcat/standard-sauce.git
+	url = https://github.com/majesticwizardcat/standard-sauce.git
