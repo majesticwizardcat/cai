@@ -21,18 +21,18 @@ uint NNAITrainer::findAndStorePlayerIndex() {
 	return index;
 }
 
-std::vector<NNPPTrainingUpdate<float>> NNAITrainer::runSession(NeuronBuffer<float>& neuronBuffer) {
-	std::vector<NNPPTrainingUpdate<float>> scoreUpdates;
+std::vector<nnpp::NNPPTrainingUpdate<float>> NNAITrainer::runSession(nnpp::NeuronBuffer<float>& neuronBuffer) {
+	std::vector<nnpp::NNPPTrainingUpdate<float>> scoreUpdates;
 	uint whitePlayerIndex = findAndStorePlayerIndex();
 	uint blackPlayerIndex = findAndStorePlayerIndex();
 
-	NNAI* white = m_trainee->getNNAiPtrAt(whitePlayerIndex);
-	NNAI* black = m_trainee->getNNAiPtrAt(blackPlayerIndex);
+	NNAI& white = m_trainee.getNNAiAt(whitePlayerIndex);
+	NNAI& black = m_trainee.getNNAiAt(blackPlayerIndex);
 
-	float pointsForWhite = runGameAgainstRandom(white, neuronBuffer);
-	float pointsForBlack = runGameAgainstRandom(black, neuronBuffer);
-	GameResult result = runGame(white, black, neuronBuffer);
-	const float gamePoints = calculatePoints(white->getScore(), black->getScore());
+	float pointsForWhite = runGameAgainstRandom(&white, neuronBuffer);
+	float pointsForBlack = runGameAgainstRandom(&black, neuronBuffer);
+	GameResult result = runGame(&white, &black, neuronBuffer);
+	const float gamePoints = calculatePoints(white.getScore(), black.getScore());
 	const float drawPoints = DRAW_POINTS * (gamePoints / POINTS_PER_GAME);
 
 	switch (result) {
@@ -46,8 +46,8 @@ std::vector<NNPPTrainingUpdate<float>> NNAITrainer::runSession(NeuronBuffer<floa
 		break;
 	case GameResult::DRAW:
 	case GameResult::DRAW_NO_MOVES:
-		pointsForWhite += white->getScore() > black->getScore() ? -drawPoints : drawPoints;
-		pointsForBlack += white->getScore() > black->getScore() ? drawPoints : -drawPoints;
+		pointsForWhite += white.getScore() > black.getScore() ? -drawPoints : drawPoints;
+		pointsForBlack += white.getScore() > black.getScore() ? drawPoints : -drawPoints;
 		break;
 	default:
 		break;
@@ -70,13 +70,13 @@ std::vector<NNPPTrainingUpdate<float>> NNAITrainer::runSession(NeuronBuffer<floa
 
 uint NNAITrainer::sessionsTillEvolution() const {
 	uint sessionsTillEvol = calculateSessionsToEvol();
-	if (m_trainee->getSessionsTrainedThisGen() > sessionsTillEvol) {
+	if (m_trainee.getSessionsTrainedThisGen() > sessionsTillEvol) {
 		return 0;
 	}
-	return sessionsTillEvol - m_trainee->getSessionsTrainedThisGen();
+	return sessionsTillEvol - m_trainee.getSessionsTrainedThisGen();
 }
 
-GameResult NNAITrainer::runGame(const NNAI* white, const NNAI* black, NeuronBuffer<float>& neuronBuffer) const {
+GameResult NNAITrainer::runGame(const NNAI* white, const NNAI* black, nnpp::NeuronBuffer<float>& neuronBuffer) const {
 	ChessBoard b;
 	NNAIPlayer whitePlayer(Color::WHITE, white, &neuronBuffer);
 	NNAIPlayer blackPlayer(Color::BLACK, black, &neuronBuffer);
@@ -84,7 +84,7 @@ GameResult NNAITrainer::runGame(const NNAI* white, const NNAI* black, NeuronBuff
 	return g.start(false);
 }
 
-float NNAITrainer::runGameAgainstRandom(const NNAI* ai, NeuronBuffer<float>& neuronBuffer) const {
+float NNAITrainer::runGameAgainstRandom(const NNAI* ai, nnpp::NeuronBuffer<float>& neuronBuffer) const {
 	ChessBoard b;
 	NNAIPlayer aiPlayer(Color::WHITE, ai, &neuronBuffer);
 	RandomPlayer random(Color::BLACK);

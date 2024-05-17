@@ -10,7 +10,7 @@
 #include <string>
 #include <memory>
 
-static const ulong VERSION = 10;
+static const uint64_t VERSION = 10;
 static const uint DEFAULT_POPULATION = 100;
 static const std::string CAI_EXT = ".cai";
 

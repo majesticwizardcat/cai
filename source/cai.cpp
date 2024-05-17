@@ -111,7 +111,7 @@ void Cai::playGameVSAI(Color playerColor) {
 		std::cout << "No population loaded, cannot play game..." << '\n';
 		return;
 	}
-	NeuronBuffer<float> neuronBuffer = allocNeuronBuffer<float>();
+	nnpp::NeuronBuffer<float> neuronBuffer = nnpp::allocNeuronBuffer<float>();
 	ChessBoard b;
 	Color aiColor = playerColor == Color::WHITE ? Color::BLACK : Color::WHITE;
 	HumanPlayer human(playerColor);

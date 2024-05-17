@@ -45,21 +45,21 @@ public:
 	}
 };
 
-class NNAITrainer : public NNPPTrainer<float> {
+class NNAITrainer : public nnpp::NNPPTrainer<float> {
 public:
 	NNAITrainer() = delete;
 	NNAITrainer(const AITrainer& other) = delete;
 	NNAITrainer(uint sessions, uint threads, CAIPopulation* const population) 
-		: NNPPTrainer<float>(sessions, threads, population, getDefaultEvolutionInfoFloat())
-		, m_indexDist(0, m_trainee->getPopulationSize() - 1)
+		: NNPPTrainer<float>(sessions, threads, *population, nnpp::getDefaultEvolutionInfoFloat())
+		, m_indexDist(0, m_trainee.getPopulationSize() - 1)
 		, m_realDist(0.0f, 1.0f) { }
 
 protected:
-	std::vector<NNPPTrainingUpdate<float>> runSession(NeuronBuffer<float>& neuronBuffer) override;
+	std::vector<nnpp::NNPPTrainingUpdate<float>> runSession(nnpp::NeuronBuffer<float>& neuronBuffer) override;
 	uint sessionsTillEvolution() const override;
 	float getAvgScoreImportance() const override { return 0.5f; }
 
-	void setEvolutionInfo(EvolutionInfo<float>& evolutionInfo) const override {
+	void setEvolutionInfo(nnpp::EvolutionInfo<float>& evolutionInfo) const override {
 		evolutionInfo.minMutationValue = MIN_MUTATION_VALUE;
 		evolutionInfo.maxMutationValue = MAX_MUTATION_VALUE;
 		evolutionInfo.weightMutationChance = getWeightMutationChance();
@@ -86,18 +86,18 @@ private:
 	}
 
 	inline float getWeightMutationChance() const {
-		return std::abs(std::cos(m_trainee->getGenerartion() * MUTATION_FREQ_CHANGE)) * MAX_MUTATION_CHANCE;
+		return std::abs(std::cos(m_trainee.getGenerartion() * MUTATION_FREQ_CHANGE)) * MAX_MUTATION_CHANCE;
 	}
 
 	inline uint calculateSessionsToEvol() const {
-		return GAMES_PER_POP * m_trainee->getPopulationSize();
+		return GAMES_PER_POP * m_trainee.getPopulationSize();
 	}
 
 	inline float getLayerMutationChance() const {
-		return std::abs(std::sin(m_trainee->getGenerartion() * MUTATION_FREQ_CHANGE)) * MAX_LAYER_MUTATION_CHANCE;
+		return std::abs(std::sin(m_trainee.getGenerartion() * MUTATION_FREQ_CHANGE)) * MAX_LAYER_MUTATION_CHANCE;
 	}
 
-	GameResult runGame(const NNAI* white, const NNAI* black, NeuronBuffer<float>& neuronBuffer) const;
-	float runGameAgainstRandom(const NNAI* ai, NeuronBuffer<float>& neuronBuffer) const;
+	GameResult runGame(const NNAI* white, const NNAI* black, nnpp::NeuronBuffer<float>& neuronBuffer) const;
+	float runGameAgainstRandom(const NNAI* ai, nnpp::NeuronBuffer<float>& neuronBuffer) const;
 	uint findAndStorePlayerIndex();
 };

@@ -11,7 +11,7 @@ int main() {
 	NNAI ai(0, CAI_LAYERS);
 	ai.initRandomUniform(MIN_AI_WEIGHT_VALUE, MAX_AI_WEIGHT_VALUE);
 	ChessBoard board("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10");
-	NeuronBuffer<float> neuronBuffer = allocNeuronBuffer<float>();
+	nnpp::NeuronBuffer<float> neuronBuffer = nnpp::allocNeuronBuffer<float>();
 
 	{
 		const uint sessions = 100;

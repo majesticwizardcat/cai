@@ -2,7 +2,7 @@
 
 #include <nnpp.hpp>
 
-typedef NNPopulation<float> CAIPopulation;
+typedef nnpp::NNPopulation<float> CAIPopulation;
 
 static const std::vector<uint> ANALYZER_LAYOUT = { 64, 72, 95, 190, 250, 380, 444, 612, 900, 1124, 1234, 1013, 900, 712, 520, 400, 290, 220, 180, 150, 90, 64, 55, 44, 33, 23, 13, 11, 7, 5, 3, 1 };
 

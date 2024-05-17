@@ -15,7 +15,7 @@ MoveResult NNAIPlayer::getMove(const ChessBoard& board, BoardMove* outMove) {
 	for (uint i = 0; i < moves.size(); ++i) {
 		ChessBoard next(board);
 		next.playMove(moves[i]);
-		NNPPStackVector<float> values = next.asFloats();
+		nnpp::NNPPStackVector<float> values = next.asFloats();
 		float eval = analyze(values);
 		eval *= m_rgen.get(0.975f, 1.025f); // Reduce to create some random moves more possible, encapsulates the "feeling" of the ai
 		if ((m_color == WHITE && eval > bestEval) || (m_color != WHITE && eval < bestEval)) {

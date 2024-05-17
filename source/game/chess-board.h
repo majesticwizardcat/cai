@@ -6,40 +6,50 @@ class ChessBoard;
 
 #include <string>
 
-static const uint8_t PAIRS_PER_ROW = 4;
-static const uint8_t BITS_PER_TILE = 4;
-static const int8_t KING_LONG_CASTLE_X = 2;
-static const int8_t KING_SHORT_CASTLE_X = 6;
-static const int8_t ROOK_LONG_CASTLE_X = 3;
-static const int8_t ROOK_SHORT_CASTLE_X = 5;
+static constexpr uint8_t PAIRS_PER_ROW = 4;
+static constexpr uint8_t BITS_PER_TILE = 4;
+static constexpr int8_t KING_LONG_CASTLE_X = 2;
+static constexpr int8_t KING_SHORT_CASTLE_X = 6;
+static constexpr int8_t ROOK_LONG_CASTLE_X = 3;
+static constexpr int8_t ROOK_SHORT_CASTLE_X = 5;
 
 class ChessBoard {
 public:
 	ChessBoard();
 	ChessBoard(const std::string& fen);
 
-	inline bool operator==(const ChessBoard& other) const {
-		return memcmp(this, &other, sizeof(ChessBoard)) == 0;
+	inline constexpr bool operator==(const ChessBoard& other) const {
+		return m_hash == other.m_hash
+			&& m_positionData == other.m_positionData
+			&& m_tileData[0] == other.m_tileData[0]
+			&& m_tileData[1] == other.m_tileData[1]
+			&& m_tileData[2] == other.m_tileData[2]
+			&& m_tileData[3] == other.m_tileData[3];
 	}
 
-	inline bool operator!=(const ChessBoard& other) const {
-		return memcmp(this, &other, sizeof(ChessBoard)) != 0;
+	inline constexpr bool operator!=(const ChessBoard& other) const {
+		return m_hash != other.m_hash
+			|| m_positionData != other.m_positionData
+			|| m_tileData[0] != other.m_tileData[0]
+			|| m_tileData[1] != other.m_tileData[1]
+			|| m_tileData[2] != other.m_tileData[2]
+			|| m_tileData[3] != other.m_tileData[3];
 	}
 
-	inline size_t getHash() const {
+	inline constexpr uint64_t getHash() const {
 		return m_hash;
 	}
 
-	inline Color getNextPlayerColor() const {
+	inline constexpr Color getNextPlayerColor() const {
 		return m_positionInfo.nextPlayerColor;
 	}
 
-	inline void getNextPlayerMoves(MovesVector& outMoves) const {
+	inline constexpr void getNextPlayerMoves(MovesVector& outMoves) const {
 		getMoves(m_positionInfo.nextPlayerColor, outMoves);
 	}
 
-	inline NNPPStackVector<float> asFloats() const {
-		NNPPStackVector<float> res;
+	inline constexpr nnpp::NNPPStackVector<float> asFloats() const {
+		nnpp::NNPPStackVector<float> res;
 		for (uint8_t x = 0; x < 8; ++x) {
 			for (uint8_t y = 0; y < 8; ++y) {
 				res.push(getTile(x, y).asFloat());
@@ -48,48 +58,49 @@ public:
 		return res;
 	}
 
-	inline BoardTile getTile(uint8_t x, uint8_t y) const {
+	inline BoardTile getTile(const uint8_t x, const uint8_t y) const {
 		const bool isFirstPair = (x & 0b1) == 0;
-		const BoardTilePair& pair = m_boardTiles[index(x, y)];
+		const BoardTilePair pair = m_boardTiles[index(x, y)];
 		return isFirstPair ? BoardTile(pair.color0, pair.type0) : BoardTile(pair.color1, pair.type1);
 	}
 
-	inline BoardTile getTile(const TileCoords& coords) const { 
+	inline constexpr BoardTile getTile(const TileCoords coords) const { 
 		return getTile(coords.x, coords.y);
 	}
 
-	inline bool canWhiteLongCastle() const {
+	inline constexpr bool canWhiteLongCastle() const {
 		return m_positionInfo.canWhiteLongCastle;
 	}
 
-	inline bool canBlackLongCastle() const {
+	inline constexpr bool canBlackLongCastle() const {
 		return m_positionInfo.canBlackLongCastle;
 	}
 
-	inline bool canWhiteShortCastle() const {
+	inline constexpr bool canWhiteShortCastle() const {
 		return m_positionInfo.canWhiteShortCastle;
 	}
 
-	inline bool canBlackShortCastle() const {
+	inline constexpr bool canBlackShortCastle() const {
 		return m_positionInfo.canBlackShortCastle;
 	}
 
-	inline TileCoords getEnPassantCoords() const {
+	inline constexpr TileCoords getEnPassantCoords() const {
 		return m_positionInfo.enPassantSquare;
 	}
 
-	inline bool isKingInCheck(Color color) const {
-		TileCoords kingCoords = findKing(color);
+	inline constexpr bool isKingInCheck(const Color color) const {
+		const TileCoords kingCoords = findKing(color);
 		return isAttacked(color, kingCoords);
 	}
 
 	void printBoard() const;
-	void printMoveOnBoard(const BoardMove& move) const;
-	void getMoves(Color color, MovesVector& outMoves) const;
-	void playMove(const BoardMove& move);
+	void printMoveOnBoard(const BoardMove move) const;
 	void calculateHashFromCurrentState();
-	bool isAttacked(Color color, const TileCoords& coords) const;
-	bool isMoveValid(const BoardMove& move, const TileCoords& kingCoords) const;
+
+	void getMoves(const Color color, MovesVector& outMoves) const;
+	void playMove(const BoardMove move);
+	bool isAttacked(const Color color, const TileCoords coords) const;
+	bool isMoveValid(const BoardMove move, const TileCoords kingCoords) const;
 	bool isDraw() const;
 
 private:
@@ -114,13 +125,12 @@ private:
 
 	uint64_t m_hash;
 
-// Inline Helper functions
-	inline uint8_t index(int8_t x, int8_t y) const {
+	inline constexpr uint8_t index(const int8_t x, const int8_t y) const {
 		assert(x < BOARD_SIZE && y < BOARD_SIZE);
 		return y * PAIRS_PER_ROW + (x >> 1);
 	}
 
-	inline void setTile(uint8_t x, uint8_t y, const BoardTile& tile) {
+	inline constexpr void setTile(const uint8_t x, const uint8_t y, const BoardTile tile) {
 		const bool isFirstPair = (x & 0b1) == 0;
 		BoardTilePair& pair = m_boardTiles[index(x, y)];
 		if (isFirstPair) {
@@ -133,35 +143,34 @@ private:
 		}
 	}
 
-	inline void setTile(const TileCoords& coords, const BoardTile& tile) {
+	inline constexpr void setTile(const TileCoords coords, const BoardTile tile) {
 		setTile(coords.x, coords.y, tile);
 	}
 
-	inline void removePiece(uint8_t x, uint8_t y) {
+	inline constexpr void removePiece(const uint8_t x, const uint8_t y) {
 		assert(getTile(x, y).type != EMPTY);
-		setTile(x, y, BoardTile());
+		setTile(x, y, BoardTile(0));
 	}
 
-	inline void removePiece(const TileCoords& coords) {
+	inline constexpr void removePiece(const TileCoords coords) {
 		removePiece(coords.x, coords.y);
 	}
 
-// Helper functions
-	TileCoords findKing(Color color) const;
-	void getMovesForPiece(BoardTile tile, uint8_t x, uint8_t y, MovesVector& outMoves) const;
-	void getDirectionalMoves(Color color, int8_t sx, int8_t sy, int8_t dx, int8_t dy, MovesVector& outMoves) const;
-	void getSurroundingMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const;
-	void getBishopMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const;
-	void getRookMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const;
-	void getKnightMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const;
-	void getQueenMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const;
-	void getPawnMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const;
-	void getKingMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const;
-	void updateBoardDataFromMove(const BoardMove& move, BoardTile fromTile);
+	TileCoords findKing(const Color color) const;
+	void getMovesForPiece(const BoardTile tile, const uint8_t x, const uint8_t y, MovesVector& outMoves) const;
+	void getDirectionalMoves(const Color color, const int8_t sx, const int8_t sy, const int8_t dx, const int8_t dy, MovesVector& outMoves) const;
+	void getSurroundingMoves(const Color color, const int8_t sx, const int8_t sy, MovesVector& outMoves) const;
+	void getBishopMoves(const Color color, const int8_t sx, const int8_t sy, MovesVector& outMoves) const;
+	void getRookMoves(const Color color, const int8_t sx, const int8_t sy, MovesVector& outMoves) const;
+	void getKnightMoves(const Color color, const int8_t sx, const int8_t sy, MovesVector& outMoves) const;
+	void getQueenMoves(const Color color, const int8_t sx, const int8_t sy, MovesVector& outMoves) const;
+	void getPawnMoves(const Color color, const int8_t sx, const int8_t sy, MovesVector& outMoves) const;
+	void getKingMoves(const Color color, const int8_t sx, const int8_t sy, MovesVector& outMoves) const;
+	void updateBoardDataFromMove(const BoardMove move, BoardTile fromTile);
 };
 
 struct BoardHasher {
-	inline size_t operator()(const ChessBoard& board) const {
+	inline constexpr size_t operator()(const ChessBoard& board) const {
 		return board.getHash();
 	}
 };

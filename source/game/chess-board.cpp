@@ -162,7 +162,7 @@ void ChessBoard::printBoard() const {
 	std::cout << ' ' << std::endl;
 }
 
-void ChessBoard::printMoveOnBoard(const BoardMove& move) const {
+void ChessBoard::printMoveOnBoard(const BoardMove move) const {
 	auto printPromotion = [](TileType type) {
 		switch(type) {
 		case KNIGHT:
@@ -195,8 +195,8 @@ void ChessBoard::printMoveOnBoard(const BoardMove& move) const {
 		<< " -> " << static_cast<char>('a' + move.to.x) << static_cast<char>('1' + move.to.y) << printPromotion(move.promotionType) << '\n';
 }
 
-void ChessBoard::getMoves(Color color, MovesVector& outMoves) const {
-	TileCoords kingCoords(INVALID, INVALID);
+void ChessBoard::getMoves(const Color color, MovesVector& outMoves) const {
+	TileCoords kingCoords;
 	for (uint8_t x = 0; x < BOARD_SIZE; ++x) {
 		for (uint8_t y = 0; y < BOARD_SIZE; ++y) {
 			const BoardTile tile = getTile(x, y);
@@ -218,24 +218,24 @@ void ChessBoard::getMoves(Color color, MovesVector& outMoves) const {
 	}
 }
 
-void ChessBoard::playMove(const BoardMove& move) {
+void ChessBoard::playMove(const BoardMove move) {
 	assert(getTile(move.to).type != KING); // There should not be a move played that captures the king
 
 // Although this does the same, remove piece will perform an extra check when debugging that's useful
 // so we keep it like this, even though it's duplicated (this can be improved later)
-	const auto removeAndUpdateHash = [this](const TileCoords& coords) {
+	const auto removeAndUpdateHash = [this](const TileCoords coords) {
 		m_hash ^= boardhashing::BOARD_HASH_TABLE.getBoardHashValue(getTile(coords), coords);
 		removePiece(coords);
 		m_hash ^= boardhashing::BOARD_HASH_TABLE.getBoardHashValue(BoardTile(0), coords);
 	};
 
-	const auto setAndUpdateHash = [this](const TileCoords& coords, const BoardTile& tile) {
+	const auto setAndUpdateHash = [this](const TileCoords coords, const BoardTile tile) {
 		m_hash ^= boardhashing::BOARD_HASH_TABLE.getBoardHashValue(getTile(coords), coords);
 		setTile(coords, tile);
 		m_hash ^= boardhashing::BOARD_HASH_TABLE.getBoardHashValue(tile, coords);
 	};
 
-	const auto removeCastleAndUpdateHash = [this](Color color, bool isLongCastle, bool curValue) {
+	const auto removeCastleAndUpdateHash = [this](const Color color, const bool isLongCastle, const bool curValue) {
 		if (!curValue) {
 			return;
 		}
@@ -243,7 +243,7 @@ void ChessBoard::playMove(const BoardMove& move) {
 		m_hash ^= boardhashing::BOARD_HASH_TABLE.getCastleHashValue(false, color, isLongCastle);
 	};
 
-	const auto removeCastlesCoords = [this, &removeCastleAndUpdateHash](const TileCoords& coords) {
+	const auto removeCastlesCoords = [this, &removeCastleAndUpdateHash](const TileCoords coords) {
 		if (coords.x == 0) {
 			if (coords.y == 0) {
 				removeCastleAndUpdateHash(WHITE, true, m_positionInfo.canWhiteLongCastle);
@@ -355,7 +355,7 @@ void ChessBoard::calculateHashFromCurrentState() {
 	}
 }
 
-bool ChessBoard::isAttacked(Color color, const TileCoords& coords) const {
+bool ChessBoard::isAttacked(const Color color, const TileCoords coords) const {
 	MovesVector moves;
 	getQueenMoves(color, coords.x, coords.y, moves);
 
@@ -391,7 +391,7 @@ bool ChessBoard::isAttacked(Color color, const TileCoords& coords) const {
 	return false;
 }
 
-bool ChessBoard::isMoveValid(const BoardMove& move, const TileCoords& kingCoords) const {
+bool ChessBoard::isMoveValid(const BoardMove move, const TileCoords kingCoords) const {
 	const BoardTile fromTile = getTile(move.from);
 
 	if (move.isCastle(fromTile.type)) {
@@ -455,7 +455,7 @@ TileCoords ChessBoard::findKing(Color color) const {
 	return TileCoords();
 }
 
-void ChessBoard::getMovesForPiece(BoardTile tile, uint8_t x, uint8_t y, MovesVector& outMoves) const {
+void ChessBoard::getMovesForPiece(const BoardTile tile, const uint8_t x, const uint8_t y, MovesVector& outMoves) const {
 	switch (tile.type) {
 	case PAWN: 		getPawnMoves(tile.color, x, y, outMoves); 	return;
 	case ROOK: 		getRookMoves(tile.color, x, y, outMoves); 	return;
@@ -467,7 +467,7 @@ void ChessBoard::getMovesForPiece(BoardTile tile, uint8_t x, uint8_t y, MovesVec
 	}
 }
 
-void ChessBoard::getDirectionalMoves(Color color, int8_t sx, int8_t sy, int8_t dx, int8_t dy, MovesVector& outMoves) const {
+void ChessBoard::getDirectionalMoves(const Color color, const int8_t sx, const int8_t sy, const int8_t dx, const int8_t dy, MovesVector& outMoves) const {
 	BoardMove move(sx, sy, sx, sy);
 
 	for(uint8_t i = 0; i < BOARD_SIZE; ++i) { // using a for loop here only for the compiler
@@ -488,7 +488,7 @@ void ChessBoard::getDirectionalMoves(Color color, int8_t sx, int8_t sy, int8_t d
 	}
 }
 
-void ChessBoard::getSurroundingMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const {
+void ChessBoard::getSurroundingMoves(const Color color, const int8_t sx, const int8_t sy, MovesVector& outMoves) const {
 	BoardMove move(sx, sy, sx, sy);
 	for (int8_t i = -1; i <= 1; ++i) {
 		for (int8_t j = -1; j <= 1; ++j) {
@@ -506,78 +506,53 @@ void ChessBoard::getSurroundingMoves(Color color, int8_t sx, int8_t sy, MovesVec
 	}
 }
 
-void ChessBoard::getBishopMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const {
-	for (int8_t i = -1; i <= 1; ++i) {
-		if (i == 0) {
-			continue;
-		}
-
-		for (int8_t j = -1; j <= 1; ++j) {
-			if (j == 0) {
-				continue;
-			}
-			getDirectionalMoves(color, sx, sy, i, j, outMoves);
-		}
-	}
+void ChessBoard::getBishopMoves(const Color color, const int8_t sx, const int8_t sy, MovesVector& outMoves) const {
+	getDirectionalMoves(color, sx, sy, -1, -1, outMoves);
+	getDirectionalMoves(color, sx, sy, -1, 1, outMoves);
+	getDirectionalMoves(color, sx, sy, 1, -1, outMoves);
+	getDirectionalMoves(color, sx, sy, 1, 1, outMoves);
 }
 
-void ChessBoard::getRookMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const {
-	for (int8_t i = -1; i <= 1; ++i) {
-		if (i == 0) {
-			continue;
-		}
-		getDirectionalMoves(color, sx, sy, i, 0, outMoves);
-		getDirectionalMoves(color, sx, sy, 0, i, outMoves);
-	}
+void ChessBoard::getRookMoves(const Color color, const int8_t sx, const int8_t sy, MovesVector& outMoves) const {
+	getDirectionalMoves(color, sx, sy, -1, 0, outMoves);
+	getDirectionalMoves(color, sx, sy, 1, 0, outMoves);
+	getDirectionalMoves(color, sx, sy, 0, -1, outMoves);
+	getDirectionalMoves(color, sx, sy, 0, 1, outMoves);
 }
 
-void ChessBoard::getKnightMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const {
-	const BoardTile fromTile = getTile(sx, sy);
-	BoardMove move(sx, sy, sx, sy);
-	for (int8_t i = -1; i <= 1; ++i) {
-		if (i == 0) {
-			continue;
-		}
-
-		for (int8_t j = -1; j <= 1; ++j) {
-			if (j == 0) {
-				continue;
-			}
-
-			move.to.x = sx + 2 * i;
-			move.to.y = sy + j;
-			if (!move.to.areOutsideBoard()) {
-				const BoardTile toTile = getTile(move.to);
-				if (toTile.type == EMPTY || toTile.color != color) {
-					outMoves.push(move);
-				}
-			}
-
-			move.to.x = sx + j;
-			move.to.y = sy + i * 2;
-			if (!move.to.areOutsideBoard()) {
-				const BoardTile toTile = getTile(move.to);
-				if (toTile.type == EMPTY || toTile.color != color) {
-					outMoves.push(move);
-				}
+void ChessBoard::getKnightMoves(const Color color, const int8_t sx, const int8_t sy, MovesVector& outMoves) const {
+	const auto addIfEmptyOrOpositeColor = [this, color, sx, sy, &outMoves](const int8_t toX, const int8_t toY) {
+		const BoardMove move(sx, sy, toX, toY);
+		if (!move.to.areOutsideBoard()) {
+			const BoardTile toTile = getTile(move.to);
+			if (toTile.type == EMPTY || toTile.color != color) {
+				outMoves.push(move);
 			}
 		}
-	}
+	};
+
+	addIfEmptyOrOpositeColor(sx - 2, sy - 1);
+	addIfEmptyOrOpositeColor(sx - 1, sy - 2);
+	addIfEmptyOrOpositeColor(sx - 2, sy + 1);
+	addIfEmptyOrOpositeColor(sx + 1, sy - 2);
+	addIfEmptyOrOpositeColor(sx + 2, sy - 1);
+	addIfEmptyOrOpositeColor(sx - 1, sy + 2);
+	addIfEmptyOrOpositeColor(sx + 2, sy + 1);
+	addIfEmptyOrOpositeColor(sx + 1, sy + 2);
 }
 
-void ChessBoard::getQueenMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const {
+void ChessBoard::getQueenMoves(const Color color, const int8_t sx, const int8_t sy, MovesVector& outMoves) const {
 	getRookMoves(color, sx, sy, outMoves);
 	getBishopMoves(color, sx, sy, outMoves);
 }
 
-void ChessBoard::getPawnMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const {
-	BoardMove move(sx, sy, sx, sy);
+void ChessBoard::getPawnMoves(const Color color, const int8_t sx, const int8_t sy, MovesVector& outMoves) const {
 	const int8_t dir = color == WHITE ? 1 : -1;
 	const int8_t enPas = color == WHITE ? 4 : 3;
 	const int8_t prom = color == WHITE ? 7 : 0;
 	const int8_t pawStart = color == WHITE ? 1 : 6;
 
-	auto addPromotionMoves = [](const TileCoords& from, const TileCoords& to, MovesVector& outMoves) {
+	constexpr auto addPromotionMoves = [](const TileCoords from, const TileCoords to, MovesVector& outMoves) {
 		BoardMove move(from, to);
 		for (uint8_t p = 0; p < NUM_OF_TYPES; ++p) {
 			if (p == QUEEN || p == KNIGHT || p == BISHOP || p == ROOK) {
@@ -587,7 +562,7 @@ void ChessBoard::getPawnMoves(Color color, int8_t sx, int8_t sy, MovesVector& ou
 		}
 	};
 
-	move.to.y = sy + dir;
+	BoardMove move(sx, sy, sx, sy + dir);
 	assert(!move.to.areOutsideBoard()); // Pawn should always be on board on the y axis otehrwise there has been an error
 	for (int8_t i = -1; i <= 1; ++i) {
 		move.to.x = sx + i;
@@ -632,10 +607,10 @@ void ChessBoard::getPawnMoves(Color color, int8_t sx, int8_t sy, MovesVector& ou
 	}
 }
 
-void ChessBoard::getKingMoves(Color color, int8_t sx, int8_t sy, MovesVector& outMoves) const {
+void ChessBoard::getKingMoves(const Color color, const int8_t sx, const int8_t sy, MovesVector& outMoves) const {
 	getSurroundingMoves(color, sx, sy, outMoves);
 
-	auto isSpaceBetweenEmpty = [this, &sy](int8_t start, int8_t end) {
+	const auto isSpaceBetweenEmpty = [this, &sy](const int8_t start, const int8_t end) {
 		assert(start <= end);
 		for (int8_t i = start; i <= end; ++i) {
 			if (getTile(i, sy).type != EMPTY) {
@@ -662,7 +637,7 @@ void ChessBoard::getKingMoves(Color color, int8_t sx, int8_t sy, MovesVector& ou
 	}
 }
 
-void ChessBoard::updateBoardDataFromMove(const BoardMove& move, BoardTile fromTile) {
+void ChessBoard::updateBoardDataFromMove(const BoardMove move, BoardTile fromTile) {
 	assert(getTile(move.to).type != KING); // There should not be a move played that captures the king
 	if (move.promotionType != EMPTY) {
 		fromTile.type = move.promotionType;

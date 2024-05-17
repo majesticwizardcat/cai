@@ -33,7 +33,7 @@ uint64_t perft(const std::string& fen, uint8_t startingDepth, bool verbose) {
 	};
 
 	ChessBoard startingPosition(fen);
-	uint64_t numOfThreads = std::thread::hardware_concurrency();
+	uint64_t numOfThreads = 1;//std::thread::hardware_concurrency();
 
 	if (verbose) {
 		std::cout << "Starting perft test with depth " << startingDepth << " using " << numOfThreads << " threads..." << '\n';

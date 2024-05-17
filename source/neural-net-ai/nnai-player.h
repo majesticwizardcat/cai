@@ -8,14 +8,14 @@ class NNAIPlayer;
 
 #include <nnpp.hpp>
 
-typedef NNAi<float> NNAI;
+typedef nnpp::NNAi<float> NNAI;
 
 const float REDUCTION = 1000.0f;
 
 class NNAIPlayer : public Player {
 public:
 	NNAIPlayer() = delete;
-	NNAIPlayer(Color color, const NNAI* ai, NeuronBuffer<float>* const neuronBuffer)
+	NNAIPlayer(Color color, const NNAI* ai, nnpp::NeuronBuffer<float>* const neuronBuffer)
 			: Player(color)
 			, m_ai(ai)
 			, m_neuronBuffer(neuronBuffer) {
@@ -27,9 +27,9 @@ public:
 private:
 	const NNAI* m_ai;
 	RandomGenerator m_rgen;
-	NeuronBuffer<float>* const m_neuronBuffer;
+	nnpp::NeuronBuffer<float>* const m_neuronBuffer;
 
-	inline void reduce(NNPPStackVector<float>& vec) const {
+	inline void reduce(nnpp::NNPPStackVector<float>& vec) const {
 		for (uint i = 0; i < vec.size(); ++i) {
 			while (std::abs(vec[i]) > REDUCTION) {
 				vec[i] *= 0.1f;
@@ -37,8 +37,8 @@ private:
 		}
 	}
 
-	inline float analyze(NNPPStackVector<float>& position) const {
-		NNPPStackVector<float> res = m_ai->feedAt(ANALYZER_NETWORK_INDEX, position, *m_neuronBuffer);
+	inline float analyze(nnpp::NNPPStackVector<float>& position) const {
+		nnpp::NNPPStackVector<float> res = m_ai->feedAt(ANALYZER_NETWORK_INDEX, position, *m_neuronBuffer);
 //		reduce(res);
 		return res[0];
 	}

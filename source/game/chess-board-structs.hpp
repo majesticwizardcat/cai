@@ -1,21 +1,17 @@
 #pragma once
 
 #include <cassert>
-#include <nnpp.hpp>
+#include "nnpp.hpp"
 
-typedef unsigned char uint8_t;
-typedef unsigned int uint32_t;
-typedef unsigned long long uint64_t;
-
-static const uint8_t BOARD_SIZE = 8;
-static const int8_t INVALID = -1;
-static const ulong MAX_MOVES = 255;
+static constexpr uint8_t BOARD_SIZE = 8;
+static constexpr int8_t INVALID = -1;
+static constexpr uint64_t MAX_MOVES = 255;
 
 struct TileCoords {
 	int8_t x : 4;
 	int8_t y : 4;
 
-	TileCoords(int8_t x, int8_t y)
+	constexpr TileCoords(const int8_t x, const int8_t y)
 			: x(x)
 			, y(y) {
 		assert(x < BOARD_SIZE);
@@ -24,16 +20,16 @@ struct TileCoords {
 
 	TileCoords() = default;
 
-	inline bool operator==(const TileCoords& other) const {
+	inline constexpr bool operator==(const TileCoords other) const {
 		return x == other.x && y == other.y;
 	}
 
-	inline bool areValid() const {
+	inline constexpr bool areValid() const {
 		assert((x != INVALID && y != INVALID) || (x == INVALID && y == INVALID));
 		return x != INVALID; // if one's invalid, both should
 	}
 
-	inline bool areOutsideBoard() const {
+	inline constexpr bool areOutsideBoard() const {
 		return x < 0 || y < 0; // board ranges at [0, 7]. Each coords ranges from [-7, 7]
 	}
 };
@@ -63,27 +59,24 @@ struct BoardTilePair {
 };
 
 struct BoardTile {
-	Color color : 1;
-	TileType type : 3;
+	union {
+		struct {
+			Color color : 1;
+			TileType type : 3;
+		};
+		uint8_t data;
+	};
 
 	BoardTile() = default;
 
-	BoardTile(Color color, TileType type)
+	BoardTile(const Color color, const TileType type)
 			: color(color)
 			, type(type) { }
 
-	BoardTile(uint8_t fromUint8) {
-		constexpr uint8_t colorMask = 0b1;
-		constexpr uint8_t typeMask = 0b111;
-		color = static_cast<Color>(fromUint8 & colorMask);
-		type = static_cast<TileType>((fromUint8 >> 1) & typeMask);
-	}
+	constexpr BoardTile(const uint8_t fromUint8)
+			: data(fromUint8) {}
 
-	inline operator uint8_t() const {
-		return color | (type << 1);
-	}
-
-	inline operator char() const {
+	inline constexpr operator char() const {
 		switch(type) {
 		case TileType::PAWN:
 			return color == Color::WHITE ? 'P' : 'p';
@@ -103,21 +96,21 @@ struct BoardTile {
 		return ' ';
 	}
 
-	inline float asFloat() const {
-		float color = color == WHITE ? 1.0f : -1.0f;
+	inline constexpr float asFloat() const {
+		float c = color == WHITE ? 1.0f : -1.0f;
 		switch(type) {
 		case PAWN:
-			return 1.0f * color;
+			return 1.0f * c;
 		case KNIGHT:
-			return 3.0f * color;
+			return 3.0f * c;
 		case BISHOP:
-			return 3.5f * color;
+			return 3.5f * c;
 		case ROOK:
-			return 5.0f * color;
+			return 5.0f * c;
 		case QUEEN:
-			return 9.0f * color;
+			return 9.0f * c;
 		case KING:
-			return 10.0f * color;
+			return 10.0f * c;
 		default:
 			return 0.0f;
 		};
@@ -133,22 +126,22 @@ struct BoardMove {
 
 	BoardMove() = default;
 
-	BoardMove(uint8_t fromX, uint8_t fromY, uint8_t toX, uint8_t toY)
+	constexpr BoardMove(const uint8_t fromX, const uint8_t fromY, const uint8_t toX, const uint8_t toY)
 			: promotionType(EMPTY)
 			, enPassantPawn(INVALID, INVALID)
 			, from(fromX, fromY)
 			, to(toX, toY) { }
 	
-	BoardMove(const TileCoords& from, const TileCoords& to)
+	constexpr BoardMove(const TileCoords from, const TileCoords to)
 			: promotionType(EMPTY)
 			, enPassantPawn(INVALID, INVALID)
 			, from(from)
 			, to(to) { }
-	
-	inline bool constexpr isCastle(TileType type) const { 
+
+	inline constexpr bool isCastle(const TileType type) const { 
 		assert(from.areValid() && to.areValid());
 		return type == KING && std::abs(from.x - to.x) == 2;
 	}
 };
 
-typedef StackVector<BoardMove, MAX_MOVES> MovesVector;
+typedef sauce::StaticVector<BoardMove, MAX_MOVES> MovesVector;

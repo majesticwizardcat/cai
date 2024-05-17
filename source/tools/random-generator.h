@@ -3,8 +3,9 @@
 
 #include <random>
 #include <chrono>
-#include <pcg/pcg_random.hpp>
-#include <pcg/pcg_extras.hpp>
+
+#include "pcg_random.hpp"
+#include "pcg_extras.hpp"
 
 class RandomGenerator {
 private:
