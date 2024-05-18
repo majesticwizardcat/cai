@@ -37,7 +37,6 @@ struct TileCoords {
 enum Color : uint8_t {
 	WHITE,
 	BLACK,
-	NUM_OF_COLORS,
 };
 
 enum TileType : uint8_t {
