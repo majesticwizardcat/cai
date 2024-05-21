@@ -16,7 +16,7 @@ public:
 	Player(Color color) : m_color(color) {} 
 	virtual ~Player() { }
 
-	inline Color getColor() const { return m_color; }
+	inline constexpr Color getColor() const { return m_color; }
 	virtual MoveResult getMove(const ChessBoard& board, BoardMove* move) = 0;
 	virtual void revert() { };
 };

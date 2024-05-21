@@ -11,13 +11,12 @@ MoveResult NNAIPlayer::getMove(const ChessBoard& board, BoardMove* outMove) {
 	}
 
 	float bestEval = m_color == WHITE ? std::numeric_limits<float>::min() : std::numeric_limits<float>::max();
-	uint bestEvalIndex = 0;
-	for (uint i = 0; i < moves.size(); ++i) {
+	uint32_t bestEvalIndex = 0;
+	for (uint32_t i = 0; i < moves.size(); ++i) {
 		ChessBoard next(board);
 		next.playMove(moves[i]);
-		nnpp::NNPPStackVector<float> values = next.asFloats();
-		float eval = analyze(values);
-		eval *= m_rgen.get(0.975f, 1.025f); // Reduce to create some random moves more possible, encapsulates the "feeling" of the ai
+		const nnpp::NNPPStackVector<float> values = next.asFloats();
+		const float eval = analyze(values);
 		if ((m_color == WHITE && eval > bestEval) || (m_color != WHITE && eval < bestEval)) {
 			bestEval = eval;
 			bestEvalIndex = i;

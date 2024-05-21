@@ -8,30 +8,30 @@
 #include <atomic>
 #include <functional>
 
-uint NNAITrainer::findAndStorePlayerIndex() {
+uint32_t NNAITrainer::findAndStorePlayerIndex() {
 	std::lock_guard<std::mutex> lock(m_occupiedSetLock);
-	uint index = m_indexDist(m_randomDevice);
+	uint32_t index = m_indexDist(m_randomDevice);
 
 	while (m_occupied.find(index) != m_occupied.end()) {
 		index = m_indexDist(m_randomDevice);
 	}
 
-	assert(index < m_trainee->getPopulationSize());
+	assert(index < m_trainee.getPopulationSize());
 	m_occupied.insert(index);
 	return index;
 }
 
 std::vector<nnpp::NNPPTrainingUpdate<float>> NNAITrainer::runSession(nnpp::NeuronBuffer<float>& neuronBuffer) {
 	std::vector<nnpp::NNPPTrainingUpdate<float>> scoreUpdates;
-	uint whitePlayerIndex = findAndStorePlayerIndex();
-	uint blackPlayerIndex = findAndStorePlayerIndex();
+	const uint32_t whitePlayerIndex = findAndStorePlayerIndex();
+	const uint32_t blackPlayerIndex = findAndStorePlayerIndex();
 
 	NNAI& white = m_trainee.getNNAiAt(whitePlayerIndex);
 	NNAI& black = m_trainee.getNNAiAt(blackPlayerIndex);
 
 	float pointsForWhite = runGameAgainstRandom(&white, neuronBuffer);
 	float pointsForBlack = runGameAgainstRandom(&black, neuronBuffer);
-	GameResult result = runGame(&white, &black, neuronBuffer);
+	const GameResult result = runGame(&white, &black, neuronBuffer);
 	const float gamePoints = calculatePoints(white.getScore(), black.getScore());
 	const float drawPoints = DRAW_POINTS * (gamePoints / POINTS_PER_GAME);
 
@@ -68,7 +68,7 @@ std::vector<nnpp::NNPPTrainingUpdate<float>> NNAITrainer::runSession(nnpp::Neuro
 	return scoreUpdates;
 }
 
-uint NNAITrainer::sessionsTillEvolution() const {
+uint64_t NNAITrainer::sessionsTillEvolution() const {
 	uint sessionsTillEvol = calculateSessionsToEvol();
 	if (m_trainee.getSessionsTrainedThisGen() > sessionsTillEvol) {
 		return 0;

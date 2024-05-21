@@ -10,8 +10,6 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
-add_subdirectory(nnpp)
-
 include_directories(source)
 include_directories(libraries)
 include_directories(standard-sauce)

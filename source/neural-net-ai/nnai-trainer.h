@@ -14,22 +14,6 @@ class AITrainer;
 #include <random>
 #include <algorithm>
 
-const float POINTS_PER_GAME = 25.0f;
-const float DRAW_POINTS = 3.5f;
-const float RANDOM_WIN_POINTS = 7.0f;
-const float MAX_MUTATION_CHANCE = 0.2f;
-const float MUTATION_FREQ_CHANGE = 0.1f;
-const float LAYER_ADDITION_CHANCE = 1.0f;
-const float MAX_LAYER_MUTATION_CHANCE = 0.1f;
-const float MIN_MUTATION_VALUE = MIN_AI_WEIGHT_VALUE * 15.0f;
-const float MAX_MUTATION_VALUE = MAX_AI_WEIGHT_VALUE * 15.0f;
-const uint MAX_LAYER_MUTATION = 2;
-const uint GAMES_PER_POP = 20;
-const uint TRAINING_SESSIONS_REQUIRED = GAMES_PER_POP;
-const float CHILD_REGRESSION = 0.8f;
-const uint MAX_MOVES_PER_GAME = 160;
-const uint MAX_MOVES_PER_RANDOM_GAME = 80;
-
 struct TrainTest {
 public:
 	uint cyclesPerMove;
@@ -49,17 +33,17 @@ class NNAITrainer : public nnpp::NNPPTrainer<float> {
 public:
 	NNAITrainer() = delete;
 	NNAITrainer(const AITrainer& other) = delete;
-	NNAITrainer(uint sessions, uint threads, CAIPopulation* const population) 
-		: NNPPTrainer<float>(sessions, threads, *population, nnpp::getDefaultEvolutionInfoFloat())
-		, m_indexDist(0, m_trainee.getPopulationSize() - 1)
-		, m_realDist(0.0f, 1.0f) { }
+	NNAITrainer(uint32_t sessions, uint32_t threads, CAIPopulation* const population) 
+			: NNPPTrainer<float>(sessions, threads, *population, nnpp::getDefaultEvolutionInfoFloat())
+			, m_indexDist(0, m_trainee.getPopulationSize() - 1)
+			, m_realDist(0.0f, 1.0f) { }
 
 protected:
-	std::vector<nnpp::NNPPTrainingUpdate<float>> runSession(nnpp::NeuronBuffer<float>& neuronBuffer) override;
-	uint sessionsTillEvolution() const override;
-	float getAvgScoreImportance() const override { return 0.5f; }
+	std::vector<nnpp::NNPPTrainingUpdate<float>> runSession(nnpp::NeuronBuffer<float>& neuronBuffer) override final;
+	uint64_t sessionsTillEvolution() const override final;
+	float getAvgScoreImportance() const override final { return 0.5f; }
 
-	void setEvolutionInfo(nnpp::EvolutionInfo<float>& evolutionInfo) const override {
+	void setEvolutionInfo(nnpp::EvolutionInfo<float>& evolutionInfo) const override final {
 		evolutionInfo.minMutationValue = MIN_MUTATION_VALUE;
 		evolutionInfo.maxMutationValue = MAX_MUTATION_VALUE;
 		evolutionInfo.weightMutationChance = getWeightMutationChance();
@@ -71,33 +55,49 @@ protected:
 	}
 
 private:
-	std::random_device m_randomDevice;
+	static constexpr float POINTS_PER_GAME = 25.0f;
+	static constexpr float DRAW_POINTS = 3.5f;
+	static constexpr float RANDOM_WIN_POINTS = 7.0f;
+	static constexpr float MAX_MUTATION_CHANCE = 0.2f;
+	static constexpr float MUTATION_FREQ_CHANGE = 0.1f;
+	static constexpr float LAYER_ADDITION_CHANCE = 1.0f;
+	static constexpr float MAX_LAYER_MUTATION_CHANCE = 0.1f;
+	static constexpr float MIN_MUTATION_VALUE = MIN_AI_WEIGHT_VALUE * 15.0f;
+	static constexpr float MAX_MUTATION_VALUE = MAX_AI_WEIGHT_VALUE * 15.0f;
+	static constexpr uint32_t MAX_LAYER_MUTATION = 2;
+	static constexpr uint32_t GAMES_PER_POP = 20;
+	static constexpr uint32_t TRAINING_SESSIONS_REQUIRED = GAMES_PER_POP;
+	static constexpr float CHILD_REGRESSION = 0.8f;
+	static constexpr uint32_t MAX_MOVES_PER_GAME = 160;
+	static constexpr uint32_t MAX_MOVES_PER_RANDOM_GAME = 80;
+
+	pcg32_fast m_randomDevice;
 	std::uniform_real_distribution<float> m_realDist;
 	std::uniform_int_distribution<uint> m_indexDist;
 	std::unordered_set<uint> m_occupied;
 	std::mutex m_occupiedSetLock;
 
-	inline static float calculatePoints(float score0, float score1) {
-		const float alpha = 0.007f;
-		float absDif = std::abs(score0 - score1);
-		float mul = absDif >= 300.0f ? 0.1f : std::sqrt(1.0f / std::exp(absDif * alpha));
+	inline static constexpr float calculatePoints(const float score0, const float score1) {
+		constexpr float alpha = 0.007f;
+		const float absDif = std::abs(score0 - score1);
+		const float mul = absDif >= 300.0f ? 0.1f : std::sqrt(1.0f / std::exp(absDif * alpha));
 		assert(mul >= 0.1f);
 		return mul * POINTS_PER_GAME;
 	}
 
-	inline float getWeightMutationChance() const {
+	inline constexpr float getWeightMutationChance() const {
 		return std::abs(std::cos(m_trainee.getGenerartion() * MUTATION_FREQ_CHANGE)) * MAX_MUTATION_CHANCE;
 	}
 
-	inline uint calculateSessionsToEvol() const {
+	inline constexpr uint32_t calculateSessionsToEvol() const {
 		return GAMES_PER_POP * m_trainee.getPopulationSize();
 	}
 
-	inline float getLayerMutationChance() const {
+	inline constexpr float getLayerMutationChance() const {
 		return std::abs(std::sin(m_trainee.getGenerartion() * MUTATION_FREQ_CHANGE)) * MAX_LAYER_MUTATION_CHANCE;
 	}
 
 	GameResult runGame(const NNAI* white, const NNAI* black, nnpp::NeuronBuffer<float>& neuronBuffer) const;
 	float runGameAgainstRandom(const NNAI* ai, nnpp::NeuronBuffer<float>& neuronBuffer) const;
-	uint findAndStorePlayerIndex();
+	uint32_t findAndStorePlayerIndex();
 };

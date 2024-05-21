@@ -22,7 +22,7 @@ public:
 		assert(neuronBuffer);
 	}
 
-	MoveResult getMove(const ChessBoard& board, BoardMove* outMove);
+	MoveResult getMove(const ChessBoard& board, BoardMove* outMove) override final;
 
 private:
 	const NNAI* m_ai;
@@ -37,9 +37,7 @@ private:
 		}
 	}
 
-	inline float analyze(nnpp::NNPPStackVector<float>& position) const {
-		nnpp::NNPPStackVector<float> res = m_ai->feedAt(ANALYZER_NETWORK_INDEX, position, *m_neuronBuffer);
-//		reduce(res);
-		return res[0];
+	inline constexpr float analyze(const nnpp::NNPPStackVector<float>& position) const {
+		return m_ai->feedAt(ANALYZER_NETWORK_INDEX, position, *m_neuronBuffer)[0];
 	}
 };
