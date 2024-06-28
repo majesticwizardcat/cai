@@ -20,16 +20,16 @@ struct TileCoords {
 
 	TileCoords() = default;
 
-	inline constexpr bool operator==(const TileCoords other) const {
+	constexpr bool operator==(const TileCoords other) const {
 		return x == other.x && y == other.y;
 	}
 
-	inline constexpr bool areValid() const {
+	constexpr bool areValid() const {
 		assert((x != INVALID && y != INVALID) || (x == INVALID && y == INVALID));
 		return x != INVALID; // if one's invalid, both should
 	}
 
-	inline constexpr bool areOutsideBoard() const {
+	constexpr bool areOutsideBoard() const {
 		return x < 0 || y < 0; // board ranges at [0, 7]. Each coords ranges from [-7, 7]
 	}
 };
@@ -75,7 +75,7 @@ struct BoardTile {
 	constexpr BoardTile(const uint8_t fromUint8)
 			: data(fromUint8) {}
 
-	inline constexpr operator char() const {
+	constexpr operator char() const {
 		switch(type) {
 		case TileType::PAWN:
 			return color == Color::WHITE ? 'P' : 'p';
@@ -95,7 +95,7 @@ struct BoardTile {
 		return ' ';
 	}
 
-	inline constexpr float asFloat() const {
+	constexpr float asFloat() const {
 		float c = color == WHITE ? 1.0f : -1.0f;
 		switch(type) {
 		case PAWN:
@@ -137,7 +137,7 @@ struct BoardMove {
 			, from(from)
 			, to(to) { }
 
-	inline constexpr bool isCastle(const TileType type) const { 
+	constexpr bool isCastle(const TileType type) const { 
 		assert(from.areValid() && to.areValid());
 		return type == KING && std::abs(from.x - to.x) == 2;
 	}

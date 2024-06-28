@@ -38,11 +38,11 @@ public:
 			: m_hashTable(createHashTable()) {
 	}
 
-	inline constexpr uint64_t getNextPlayerColorHashValue(const Color color) const {
+	constexpr uint64_t getNextPlayerColorHashValue(const Color color) const {
 		return m_hashTable[static_cast<uint32_t>(color)];
 	}
 
-	inline constexpr uint64_t getCastleHashValue(const bool isCastleAvailable, const Color color, const bool isLongCastle) const {
+	constexpr uint64_t getCastleHashValue(const bool isCastleAvailable, const Color color, const bool isLongCastle) const {
 		const uint32_t longCastlePad = static_cast<uint32_t>(isLongCastle); // 2 per castle type (long at 0, short at 1)
 		const uint32_t castlePad = static_cast<uint32_t>(isCastleAvailable) << 1; // 2 pairs (4) per availability (2 for available, 2 for not)
 		const uint32_t colorPad = static_cast<uint32_t>(color) << 2;
@@ -51,7 +51,7 @@ public:
 		return m_hashTable[index];
 	}
 
-	inline constexpr uint64_t getEnPassantHashValue(const TileCoords coords) const {
+	constexpr uint64_t getEnPassantHashValue(const TileCoords coords) const {
 		assert(coords.areValid());
 		constexpr uint32_t infoPad = TABLES_NEEDED_FOR_INFO;
 		const uint32_t coordsPad = coords.y * BOARD_SIZE + coords.x;
@@ -61,7 +61,7 @@ public:
 		return m_hashTable[index];
 	}
 
-	inline constexpr uint64_t getBoardHashValue(const BoardTile tile, const TileCoords coords) const {
+	constexpr uint64_t getBoardHashValue(const BoardTile tile, const TileCoords coords) const {
 		// if type is empty we start at 0
 		// else we move 1 to 12 more positions
 		// plus the extra padding we need from the 2 boards that hold info

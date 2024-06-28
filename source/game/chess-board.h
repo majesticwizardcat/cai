@@ -18,7 +18,7 @@ public:
 	ChessBoard();
 	ChessBoard(const std::string& fen);
 
-	inline constexpr bool operator==(const ChessBoard& other) const {
+	constexpr bool operator==(const ChessBoard& other) const {
 		return m_hash == other.m_hash
 			&& m_positionData == other.m_positionData
 			&& m_tileData[0] == other.m_tileData[0]
@@ -27,7 +27,7 @@ public:
 			&& m_tileData[3] == other.m_tileData[3];
 	}
 
-	inline constexpr bool operator!=(const ChessBoard& other) const {
+	constexpr bool operator!=(const ChessBoard& other) const {
 		return m_hash != other.m_hash
 			|| m_positionData != other.m_positionData
 			|| m_tileData[0] != other.m_tileData[0]
@@ -36,19 +36,19 @@ public:
 			|| m_tileData[3] != other.m_tileData[3];
 	}
 
-	inline constexpr uint64_t getHash() const {
+	constexpr uint64_t getHash() const {
 		return m_hash;
 	}
 
-	inline constexpr Color getNextPlayerColor() const {
+	constexpr Color getNextPlayerColor() const {
 		return m_positionInfo.nextPlayerColor;
 	}
 
-	inline constexpr void getNextPlayerMoves(MovesVector& outMoves) const {
+	constexpr void getNextPlayerMoves(MovesVector& outMoves) const {
 		getMoves(m_positionInfo.nextPlayerColor, outMoves);
 	}
 
-	inline constexpr nnpp::NNPPStackVector<float> asFloats() const {
+	constexpr nnpp::NNPPStackVector<float> asFloats() const {
 		nnpp::NNPPStackVector<float> res;
 		for (uint8_t x = 0; x < 8; ++x) {
 			for (uint8_t y = 0; y < 8; ++y) {
@@ -64,31 +64,31 @@ public:
 		return isFirstPair ? BoardTile(pair.color0, pair.type0) : BoardTile(pair.color1, pair.type1);
 	}
 
-	inline constexpr BoardTile getTile(const TileCoords coords) const { 
+	constexpr BoardTile getTile(const TileCoords coords) const { 
 		return getTile(coords.x, coords.y);
 	}
 
-	inline constexpr bool canWhiteLongCastle() const {
+	constexpr bool canWhiteLongCastle() const {
 		return m_positionInfo.canWhiteLongCastle;
 	}
 
-	inline constexpr bool canBlackLongCastle() const {
+	constexpr bool canBlackLongCastle() const {
 		return m_positionInfo.canBlackLongCastle;
 	}
 
-	inline constexpr bool canWhiteShortCastle() const {
+	constexpr bool canWhiteShortCastle() const {
 		return m_positionInfo.canWhiteShortCastle;
 	}
 
-	inline constexpr bool canBlackShortCastle() const {
+	constexpr bool canBlackShortCastle() const {
 		return m_positionInfo.canBlackShortCastle;
 	}
 
-	inline constexpr TileCoords getEnPassantCoords() const {
+	constexpr TileCoords getEnPassantCoords() const {
 		return m_positionInfo.enPassantSquare;
 	}
 
-	inline constexpr bool isKingInCheck(const Color color) const {
+	constexpr bool isKingInCheck(const Color color) const {
 		const TileCoords kingCoords = findKing(color);
 		return isAttacked(color, kingCoords);
 	}
@@ -125,12 +125,12 @@ private:
 
 	uint64_t m_hash;
 
-	inline constexpr uint8_t index(const int8_t x, const int8_t y) const {
+	constexpr uint8_t index(const int8_t x, const int8_t y) const {
 		assert(x < BOARD_SIZE && y < BOARD_SIZE);
 		return y * PAIRS_PER_ROW + (x >> 1);
 	}
 
-	inline constexpr void setTile(const uint8_t x, const uint8_t y, const BoardTile tile) {
+	constexpr void setTile(const uint8_t x, const uint8_t y, const BoardTile tile) {
 		const bool isFirstPair = (x & 0b1) == 0;
 		BoardTilePair& pair = m_boardTiles[index(x, y)];
 		if (isFirstPair) {
@@ -143,16 +143,16 @@ private:
 		}
 	}
 
-	inline constexpr void setTile(const TileCoords coords, const BoardTile tile) {
+	constexpr void setTile(const TileCoords coords, const BoardTile tile) {
 		setTile(coords.x, coords.y, tile);
 	}
 
-	inline constexpr void removePiece(const uint8_t x, const uint8_t y) {
+	constexpr void removePiece(const uint8_t x, const uint8_t y) {
 		assert(getTile(x, y).type != EMPTY);
 		setTile(x, y, BoardTile(0));
 	}
 
-	inline constexpr void removePiece(const TileCoords coords) {
+	constexpr void removePiece(const TileCoords coords) {
 		removePiece(coords.x, coords.y);
 	}
 
@@ -170,7 +170,7 @@ private:
 };
 
 struct BoardHasher {
-	inline constexpr size_t operator()(const ChessBoard& board) const {
+	constexpr size_t operator()(const ChessBoard& board) const {
 		return board.getHash();
 	}
 };

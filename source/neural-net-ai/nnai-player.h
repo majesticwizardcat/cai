@@ -37,7 +37,7 @@ private:
 		}
 	}
 
-	inline constexpr float analyze(const nnpp::NNPPStackVector<float>& position) const {
+	constexpr float analyze(const nnpp::NNPPStackVector<float>& position) const {
 		return m_ai->feedAt(ANALYZER_NETWORK_INDEX, position, *m_neuronBuffer)[0];
 	}
 };

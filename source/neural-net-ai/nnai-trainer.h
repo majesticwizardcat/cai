@@ -85,15 +85,15 @@ private:
 		return mul * POINTS_PER_GAME;
 	}
 
-	inline constexpr float getWeightMutationChance() const {
+	constexpr float getWeightMutationChance() const {
 		return std::abs(std::cos(m_trainee.getGenerartion() * MUTATION_FREQ_CHANGE)) * MAX_MUTATION_CHANCE;
 	}
 
-	inline constexpr uint32_t calculateSessionsToEvol() const {
+	constexpr uint32_t calculateSessionsToEvol() const {
 		return GAMES_PER_POP * m_trainee.getPopulationSize();
 	}
 
-	inline constexpr float getLayerMutationChance() const {
+	constexpr float getLayerMutationChance() const {
 		return std::abs(std::sin(m_trainee.getGenerartion() * MUTATION_FREQ_CHANGE)) * MAX_LAYER_MUTATION_CHANCE;
 	}
 
